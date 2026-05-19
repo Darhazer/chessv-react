@@ -18,3 +18,19 @@ export {
 } from './movementAtoms.js';
 export { Bishop, King, Knight, Pawn, Queen, Rook } from './chess.js';
 export { SilverGeneral } from './shogi.js';
+export {
+  Archbishop,
+  BerolinaPawn,
+  Chancellor,
+  ChargingKnight,
+  ChargingRook,
+  Cleric,
+  Colonel,
+  DiamondPawn,
+  Lion,
+  NarrowKnight,
+  Phoenix,
+  ShortRook,
+  Tower,
+  WarElephant,
+} from './fairy.js';

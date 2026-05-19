@@ -551,6 +551,19 @@ export class Game extends ExObject {
     return type;
   }
 
+  /**
+   * Substitute one registered piece type for another, in place. Used by
+   * variants that inherit a piece (e.g. the Pawn) from a base class but need
+   * a behaviourally different replacement.
+   */
+  replacePieceType(oldType: PieceType, newType: PieceType): PieceType {
+    const index = this.pieceTypes.indexOf(oldType);
+    if (index < 0) throw new Error('Game.replacePieceType - piece type not registered');
+    this.pieceTypes[index] = newType;
+    if (newType.name) this.setCustomProperty(newType.name, newType);
+    return newType;
+  }
+
   /** Number of (enabled) piece types. */
   get nPieceTypes(): number {
     return this.pieceTypes.length;
