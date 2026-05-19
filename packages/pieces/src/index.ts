@@ -6,4 +6,14 @@
  * PieceType with move atoms, slides, values and notation.
  */
 
-export {};
+export {
+  Camel,
+  Dabbabah,
+  Elephant,
+  Ferz,
+  Nightrider,
+  Tribbabah,
+  Wazir,
+  Zebra,
+} from './movementAtoms.js';
+export { Bishop, King, Knight, Pawn, Queen, Rook } from './chess.js';

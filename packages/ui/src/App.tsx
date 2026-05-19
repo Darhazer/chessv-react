@@ -1,15 +1,17 @@
-import { ENGINE_VERSION } from '@chessv/engine';
+import { GameView } from './components/GameView.js';
 
 /**
- * Application shell. Phase 1 replaces this with the catalog browser and game
- * view; for now it confirms the workspace packages resolve and build.
+ * Application shell. Phase 1 renders a single playable Standard Chess game;
+ * the variant catalog browser arrives with the 160-variant work in Phase 3.
  */
 export function App(): React.JSX.Element {
   return (
     <main className="app-shell">
-      <h1>ChessV Web</h1>
-      <p>A browser port of the ChessV chess-variant engine.</p>
-      <p className="app-status">Scaffold ready — engine v{ENGINE_VERSION}</p>
+      <header>
+        <h1>ChessV Web</h1>
+        <p>A browser port of the ChessV chess-variant engine — Standard Chess.</p>
+      </header>
+      <GameView />
     </main>
   );
 }
