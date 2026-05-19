@@ -17,3 +17,4 @@ export {
   Zebra,
 } from './movementAtoms.js';
 export { Bishop, King, Knight, Pawn, Queen, Rook } from './chess.js';
+export { SilverGeneral } from './shogi.js';

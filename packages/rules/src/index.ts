@@ -6,6 +6,7 @@
  * engine's Rule base class.
  */
 
+export { BareKingRule } from './bareKingRule.js';
 export { BasicPromotionRule } from './basicPromotionRule.js';
 export { CastlingRule } from './castlingRule.js';
 export { CheckmateRule } from './checkmateRule.js';

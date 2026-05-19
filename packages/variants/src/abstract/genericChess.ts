@@ -24,6 +24,7 @@ import {
 } from '@chessv/engine';
 import { King, Pawn } from '@chessv/pieces';
 import {
+  BareKingRule,
   BasicPromotionRule,
   CastlingRule,
   CheckmateRule,
@@ -98,7 +99,9 @@ export abstract class GenericChess extends Game {
       this.addEnPassantRule(this.pawn, new Direction(1, 0));
     }
 
-    // (The "Bare King" rule is ported in a later phase.)
+    // *** BARE KING *** //
+    // Added before the checkmate rule so it takes precedence.
+    if (this.bareKing) this.addRule(new BareKingRule());
 
     // Base AddRules adds the move-completion rule. The C# `[Royal]` attribute
     // added the CheckmateRule here; the web port adds it explicitly.

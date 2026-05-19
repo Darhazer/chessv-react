@@ -31,6 +31,55 @@ body {
   align-items: flex-start;
 }
 
+.catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.catalog-card {
+  text-align: left;
+  background: #2a2c30;
+  border: 1px solid #3a3d42;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+.catalog-card:hover {
+  border-color: #6b8fb5;
+  background: #31343a;
+}
+
+.catalog-card h3 {
+  margin: 0 0 0.3rem;
+}
+
+.catalog-card p {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: #b9bcc2;
+}
+
+.catalog-meta {
+  font-size: 0.78rem;
+  color: #8a8d93;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #6b8fb5;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.variant-title {
+  margin: 0.3rem 0 1rem;
+}
+
 .board-wrap {
   position: relative;
 }

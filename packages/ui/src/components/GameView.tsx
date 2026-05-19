@@ -6,15 +6,15 @@
  * version counter forces re-renders after each mutation.
  */
 import { type Game, MoveType, type MoveInfo, moveTypeHasProperty } from '@chessv/engine';
-import { Chess } from '@chessv/variants';
+import { createVariant } from '@chessv/variants';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import { useAiEngine } from '../useAiEngine.js';
 
-/** Build a fresh, initialized Standard Chess game. */
-function newGame(): Game {
-  const game = new Chess();
+/** Build a fresh, initialized game for the named variant. */
+function createGame(variantName: string): Game {
+  const game = createVariant(variantName);
   game.initialize();
   return game;
 }
@@ -56,9 +56,14 @@ const AI_DEPTHS = [
   { label: 'Hard', depth: 6 },
 ];
 
+interface GameViewProps {
+  /** The registered name of the variant to play. */
+  variantName: string;
+}
+
 /** The main game container. */
-export function GameView(): React.JSX.Element {
-  const gameRef = useRef<Game>(newGame());
+export function GameView({ variantName }: GameViewProps): React.JSX.Element {
+  const gameRef = useRef<Game>(createGame(variantName));
   const moveHashes = useRef<number[]>([]);
   const aiBusy = useRef(false);
   const [version, forceUpdate] = useReducer((n: number) => n + 1, 0);
@@ -69,7 +74,7 @@ export function GameView(): React.JSX.Element {
   const [aiDepth, setAiDepth] = useState(4);
   const [thinking, setThinking] = useState(false);
 
-  const engine = useAiEngine('Chess');
+  const engine = useAiEngine(variantName);
   const game = gameRef.current;
   const moves = legalMoves(game);
 
@@ -135,7 +140,7 @@ export function GameView(): React.JSX.Element {
   };
 
   const handleNewGame = (): void => {
-    gameRef.current = newGame();
+    gameRef.current = createGame(variantName);
     moveHashes.current = [];
     aiBusy.current = false;
     setSelectedSquare(null);
