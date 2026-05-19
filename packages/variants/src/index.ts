@@ -24,11 +24,20 @@ import { RevisedChess } from './v8x8/revisedChess.js';
 import { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 import { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 import { WildCastle } from './v8x8/wildCastle.js';
+import { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
+import { GreatChess } from './v10x10/greatChess.js';
+import { RomanChess } from './v10x10/romanChess.js';
+import { SacChess } from './v10x10/sacChess.js';
+import { Shako } from './v10x10/shako.js';
+import { ShatranjKamilX } from './v10x10/shatranjKamilX.js';
+import { UnicornGreatChess } from './v10x10/unicornGreatChess.js';
 import { registerVariant } from './registry.js';
 
 export { GenericChess } from './abstract/genericChess.js';
 export { Generic__x8 } from './abstract/generic__x8.js';
 export { Generic8x8 } from './abstract/generic8x8.js';
+export { Generic__x10 } from './abstract/generic__x10.js';
+export { Generic10x10 } from './abstract/generic10x10.js';
 export { BerolinaChess } from './v8x8/berolinaChess.js';
 export { Chess } from './v8x8/chess.js';
 export { Chess256 } from './v8x8/chess256.js';
@@ -44,6 +53,13 @@ export { RevisedChess } from './v8x8/revisedChess.js';
 export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { WildCastle } from './v8x8/wildCastle.js';
+export { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
+export { GreatChess } from './v10x10/greatChess.js';
+export { RomanChess } from './v10x10/romanChess.js';
+export { SacChess } from './v10x10/sacChess.js';
+export { Shako } from './v10x10/shako.js';
+export { ShatranjKamilX } from './v10x10/shatranjKamilX.js';
+export { UnicornGreatChess } from './v10x10/unicornGreatChess.js';
 export {
   type VariantMeta,
   createVariant,
@@ -240,4 +256,104 @@ registerVariant({
   inventedBy: 'Unknown',
   description: 'A Chess derivative with randomized setup but normal castling.',
   create: () => new WildCastle(),
+});
+
+registerVariant({
+  name: 'Great Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant', 'Historic'],
+  invented: '1700s',
+  inventedBy: 'Unknown',
+  description: 'A historic 10 x 10 variant with the missing compounds and an Amazon.',
+  create: () => new GreatChess(),
+});
+
+registerVariant({
+  name: 'Roman Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '1999',
+  inventedBy: 'Mark and Eric Woodall',
+  description: 'A 10 x 10 variant adding a non-royal "Archer" general to each side.',
+  create: () => new RomanChess(),
+});
+
+registerVariant({
+  name: 'Shako',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '1997',
+  inventedBy: 'Jean-Louis Cazaux',
+  description: 'An East-meets-West game adding the Cannon from Xiangqi and a stronger Elephant.',
+  create: () => new Shako(),
+});
+
+registerVariant({
+  name: 'Unicorn Great Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2002',
+  inventedBy: 'David Paulowich',
+  description: 'A 10 x 10 variant adding the Lion and the Unicorn (Bishop + Nightrider).',
+  colorScheme: 'Lesotho',
+  create: () => new UnicornGreatChess(),
+});
+
+registerVariant({
+  name: 'Shatranj Kamil X',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2007',
+  inventedBy: 'David Paulowich',
+  description: 'A 2007 10 x 10 expansion of the Shatranj Kamil family.',
+  create: () => new ShatranjKamilX(),
+});
+
+registerVariant({
+  name: 'Sac Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2015',
+  inventedBy: 'Kevin Pacey',
+  description: 'A piece-dense 10 x 10 variant with many powerful compound pieces.',
+  create: () => new SacChess(),
+});
+
+registerVariant({
+  name: 'Grand Shatranj D',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description: 'Joe Joyce\'s 10 x 10 variant of strong leaping pieces (Warmachine form).',
+  create: () => new GrandShatranj('Grand Shatranj D'),
+});
+
+registerVariant({
+  name: 'Grand Shatranj R',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description: 'Joe Joyce\'s 10 x 10 variant of strong leaping pieces (Rook form).',
+  create: () => new GrandShatranj('Grand Shatranj R'),
+});
+
+registerVariant({
+  name: 'Gilded Grand Shatranj',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description: 'The Grand Shatranj setup featuring both the Rook and the Lightning Warmachine.',
+  create: () => new GildedGrandShatranj(),
 });
