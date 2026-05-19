@@ -87,9 +87,39 @@ body {
   opacity: 0.5;
 }
 
+.ai-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ai-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: #b9bcc2;
+}
+
+.ai-controls select {
+  padding: 0.25rem;
+}
+
+.engine-info {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: #8a8d93;
+  margin: 0 0 0.75rem;
+}
+
+.promotion-choices {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .move-list {
   font-variant-numeric: tabular-nums;
-  max-height: 26rem;
+  max-height: 22rem;
   overflow-y: auto;
   padding-left: 2.5rem;
   margin: 0;

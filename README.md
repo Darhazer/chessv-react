@@ -12,7 +12,7 @@ Early development. See `~/.claude/plans/` for the full porting plan and roadmap.
 | ----- | ----- | ------ |
 | 0 | Monorepo scaffold | done |
 | 1 | Core engine + Standard Chess playable | done |
-| 2 | AI engine (Web Worker) | pending |
+| 2 | AI engine (Web Worker) | done |
 | 3 | All 160 variants | pending |
 | 4 | Themes, PGN, polish | pending |
 | 5 | Hardening / parity testing | pending |

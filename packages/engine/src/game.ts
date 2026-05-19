@@ -30,7 +30,7 @@ import {
 } from './basics.js';
 import { Board, NOT_CONNECTED } from './board.js';
 import { BoardMoveStack } from './boardMoveStack.js';
-import { MAX_GAME_LENGTH, MAX_PLY } from './constants.js';
+import { INFINITY, MAX_GAME_LENGTH, MAX_PLY, ONEPLY } from './constants.js';
 import { ExObject } from './exObject.js';
 import { FEN } from './fen.js';
 import type { GenericPiece } from './genericPiece.js';
@@ -44,9 +44,14 @@ import { Movement } from './movement.js';
 import { Piece } from './piece.js';
 import type { PieceType } from './pieceType.js';
 import { Result, ResultType } from './result.js';
+import { Evaluation } from './evaluation.js';
+import { Hashtable } from './hashtable.js';
+import { HashType } from './ttHashEntry.js';
+import { Statistics } from './statistics.js';
+import { TimeControl } from './timeControl.js';
 import { PromotionRule } from './rule.js';
 import type { Rule } from './rule.js';
-import { createSearchStack } from './searchTypes.js';
+import { createSearchStack, PV } from './searchTypes.js';
 import type { SearchStack } from './searchTypes.js';
 import type { Symmetry } from './symmetry.js';
 
@@ -66,6 +71,27 @@ type Constructor<T> = abstract new (...args: never[]) => T;
  * customise generation through their hooks. This keeps every variant expressible
  * as data plus a handful of reusable `Rule` objects.
  */
+/** Node classification used by the alpha-beta search. */
+export enum NodeType {
+  PV,
+  All,
+  Cut,
+}
+
+/** Progress report emitted after each completed search iteration. */
+export interface SearchInfo {
+  /** Iteration depth, in plies. */
+  depth: number;
+  /** Score from the side-to-move's perspective, in centipawns. */
+  score: number;
+  /** Total nodes searched so far. */
+  nodes: number;
+  /** Nodes per second. */
+  nps: number;
+  /** Principal variation as SAN move strings. */
+  pv: string[];
+}
+
 export class Game extends ExObject {
   // *** CONSTANTS *** //
   static readonly MAX_DIRECTIONS = 48;
@@ -163,6 +189,32 @@ export class Game extends ExObject {
   protected searchPath: Movement[] = [];
   protected seeAttackers: [Piece[], Piece[]] = [[], []];
 
+  // *** AI ENGINE (Search.cs / Evaluate.cs) *** //
+  /** Game-specific evaluation terms applied on top of material + PST. */
+  protected readonly evaluations: Evaluation[] = [];
+  /** The transposition table; created lazily on the first search. */
+  protected hashtable: Hashtable | null = null;
+  /** Transposition-table size budget, in megabytes. */
+  ttSizeInMB = 128;
+  /** Deliberate play-weakening level (0 = full strength). */
+  weakening = 0;
+  /** Search statistics for the most recent / current search. */
+  readonly statistics = new Statistics();
+  /** Per-side evaluation sign (player 0 positive, player 1 negative). */
+  protected readonly sign: readonly number[] = [1, -1];
+  protected searchTimeControl: TimeControl | null = null;
+  protected abortSearchFlag = false;
+  protected idepth = 0;
+  protected thinkStartTime = 0;
+  protected maxSearchTime = -1;
+  protected absoluteMaxSearchTime = -1;
+  protected exactMaxTime = -1;
+  protected weakeningHashShift = 12;
+  protected readonly previousBestMoves = new Uint32Array(5);
+  protected readonly razorMargin: readonly number[] = [300, 350, 400, 450, 450, 450, 450, 450];
+  /** Optional callback invoked after each completed search iteration. */
+  onSearchInfo: ((info: SearchInfo) => void) | null = null;
+
   // *** GAME RECORD *** //
   protected readonly gameHistory: MoveInfo[] = [];
   protected readonly gameHistoryTurnNumbers: number[] = [];
@@ -249,6 +301,7 @@ export class Game extends ExObject {
     for (const type of this.pieceTypes) type.initialize(this);
 
     this.addEvaluations();
+    for (const evaluation of this.evaluations) evaluation.initialize(this);
     this.finishInitialization();
     this.postInitialize();
   }
@@ -894,18 +947,18 @@ export class Game extends ExObject {
   }
 
   /** Ask the rules whether the game is won, lost or drawn. */
-  testForWinLossDraw(currentPlayer: number): MoveEventResponse {
+  testForWinLossDraw(currentPlayer: number, ply: number = this.ply): MoveEventResponse {
     for (const rule of this.rules) {
-      const response = rule.testForWinLossDraw(currentPlayer, this.ply);
+      const response = rule.testForWinLossDraw(currentPlayer, ply);
       if (response !== MoveEventResponse.NotHandled) return response;
     }
     return MoveEventResponse.NotHandled;
   }
 
   /** Ask the rules for the result when the side to move has no legal moves. */
-  noMovesResult(currentPlayer: number): MoveEventResponse {
+  noMovesResult(currentPlayer: number, ply: number = this.ply): MoveEventResponse {
     for (const rule of this.rules) {
-      const response = rule.noMovesResult(currentPlayer, this.ply);
+      const response = rule.noMovesResult(currentPlayer, ply);
       if (response !== MoveEventResponse.NotHandled) return response;
     }
     throw new Error('No rule handled the NoMovesResult message');
@@ -1062,6 +1115,11 @@ export class Game extends ExObject {
     }
     this.rules.push(rule);
     rule.initialize(this);
+  }
+
+  /** Attach a game-specific evaluation term. Initialized during {@link initialize}. */
+  addEvaluation(evaluation: Evaluation): void {
+    this.evaluations.push(evaluation);
   }
 
   /** Find the first rule of (or deriving from) the given class, or null. */
@@ -1443,6 +1501,1031 @@ export class Game extends ExObject {
 
       side ^= 1;
     }
+  }
+
+  // *** EVALUATION (Evaluate.cs) *** //
+
+  /**
+   * Statically evaluate the current position, in centipawns, from the side to
+   * move's perspective: material + piece-square tables, adjusted by the
+   * game-specific evaluations and rules, then interpolated between the midgame
+   * and endgame according to the remaining material.
+   */
+  evaluate(): number {
+    let midgameEval = this.board.getMidgameMaterialEval(0) - this.board.getMidgameMaterialEval(1);
+    let endgameEval = this.board.getEndgameMaterialEval(0) - this.board.getEndgameMaterialEval(1);
+
+    for (const evaluation of this.evaluations) {
+      [midgameEval, endgameEval] = evaluation.adjustEvaluation(midgameEval, endgameEval);
+    }
+    for (const rule of this.rules) {
+      [midgameEval, endgameEval] = rule.adjustEvaluation(this.ply, midgameEval, endgameEval);
+    }
+
+    const materialEval = this.board.getPlayerMaterial(0) + this.board.getPlayerMaterial(1);
+    const phase =
+      materialEval >= this.midgameMaterialThreshold
+        ? 128
+        : materialEval <= this.endgameMaterialThreshold
+          ? 0
+          : Math.trunc(
+              ((materialEval - this.endgameMaterialThreshold) * 128) /
+                (this.midgameMaterialThreshold - this.endgameMaterialThreshold),
+            );
+    let evalScore = Math.trunc(
+      (this.sign[this.currentSide]! * (midgameEval * phase + endgameEval * (128 - phase))) / 128,
+    );
+    // Round to the nearest 4 (quarter-pawn resolution).
+    evalScore = ((evalScore & 2) << 1) + (evalScore & ~3);
+    return evalScore;
+  }
+
+  // *** SEARCH (Search.cs) *** //
+
+  /** Request that the current search stop as soon as possible. */
+  abortSearch(): void {
+    this.abortSearchFlag = true;
+  }
+
+  /**
+   * Search the current position and return the best line for the side to move.
+   * Ported from `Game.Think` — iterative deepening with aspiration windows.
+   */
+  think(timeControl: TimeControl): Movement[] {
+    this.thinkStartTime = Date.now();
+    this.searchTimeControl = timeControl;
+    this.abortSearchFlag = false;
+
+    // Reset killer, history, butterfly and countermove tables.
+    this.killers1.fill(0);
+    this.killers2.fill(0);
+    for (let p = 0; p < this.numPlayers; p++) {
+      for (let t = 0; t < this.nPieceTypes; t++) {
+        this.historyCounters[p]![t]!.fill(0);
+        this.butterflyCounters[p]![t]!.fill(1);
+      }
+    }
+    for (const row of this.countermoves) row.fill(0);
+
+    this.statistics.reset();
+    this.statistics.searchStartTime = Date.now();
+
+    if (this.hashtable === null) {
+      this.hashtable = new Hashtable();
+      this.hashtable.setSize(this.ttSizeInMB);
+      this.weakeningHashShift = this.variation === 0 ? 12 : 13 + Math.floor(Math.random() * 12);
+    }
+
+    const pv = new PV();
+    let pvScore = -INFINITY;
+    this.searchStack[1]!.eval = this.evaluate();
+
+    this.determineTimeAllocation(timeControl);
+
+    let score = -INFINITY;
+    let delta = -INFINITY;
+    let scorePreviousIteration = -INFINITY;
+    this.currentMaxHistoryScore = 1;
+
+    let deepen = true;
+    for (this.idepth = ONEPLY; deepen && !this.abortSearchFlag; this.idepth += ONEPLY) {
+      let alpha = -INFINITY;
+      let beta = INFINITY;
+      if (this.idepth >= 5 * ONEPLY) {
+        delta = 35;
+        alpha = Math.max(pvScore - delta, -INFINITY);
+        beta = Math.min(pvScore + delta, INFINITY);
+      }
+
+      for (;;) {
+        score = this.searchRoot(alpha, beta, this.idepth);
+        if (this.abortSearchFlag) break;
+        if (score <= alpha) {
+          beta = Math.trunc((alpha + beta) / 2);
+          alpha = Math.max(score - delta, -INFINITY);
+        } else if (score >= beta) {
+          alpha = Math.trunc((alpha + beta) / 2);
+          beta = Math.min(score + delta, INFINITY);
+        } else {
+          break;
+        }
+        delta += delta;
+      }
+      pvScore = score;
+
+      if (!this.abortSearchFlag) {
+        this.searchStack[1]!.pv.copyTo(pv);
+        this.emitSearchInfo(this.idepth, score);
+      } else {
+        deepen = false;
+      }
+
+      // Track recent best moves for time-management heuristics.
+      const depthIndex = this.idepth / ONEPLY;
+      if (depthIndex <= 5) {
+        this.previousBestMoves[depthIndex - 1] = pv.get(1);
+      } else {
+        for (let x = 0; x < 4; x++) this.previousBestMoves[x] = this.previousBestMoves[x + 1]!;
+        this.previousBestMoves[4] = pv.get(1);
+      }
+
+      deepen = this.shouldDeepen(timeControl, score, scorePreviousIteration, pv);
+      scorePreviousIteration = score;
+    }
+
+    this.hashtable.nextGeneration();
+
+    // Collect the side-to-move's moves from the PV (usually exactly one).
+    const moves: Movement[] = [];
+    for (let x = 1; pv.get(x) !== 0 && Movement.playerFromHash(pv.get(x)) === this.currentSide; x++) {
+      moves.push(Movement.fromHash(pv.get(x)));
+    }
+    return moves;
+  }
+
+  /** Compute the soft / hard time limits for this search. */
+  protected determineTimeAllocation(timeControl: TimeControl): void {
+    this.maxSearchTime = -1;
+    this.absoluteMaxSearchTime = -1;
+    this.exactMaxTime = -1;
+    if (timeControl.timePerMove !== 0) {
+      this.exactMaxTime = timeControl.timePerMove;
+      return;
+    }
+    if (timeControl.movesLeft !== 0) {
+      if (timeControl.movesLeft === 1) {
+        this.maxSearchTime = Math.trunc(timeControl.activeTimeLeft / 2);
+        this.absoluteMaxSearchTime = Math.min(
+          Math.trunc(timeControl.activeTimeLeft / 2),
+          timeControl.activeTimeLeft - 500,
+        );
+      } else {
+        this.maxSearchTime = Math.trunc(
+          timeControl.activeTimeLeft / Math.min(timeControl.movesLeft, 20),
+        );
+        this.absoluteMaxSearchTime = Math.min(
+          Math.trunc((4 * timeControl.activeTimeLeft) / timeControl.movesLeft),
+          Math.trunc(timeControl.activeTimeLeft / 3),
+        );
+      }
+    } else if (timeControl.activeTimeLeft > 0) {
+      const pieceCount =
+        this.board.getPlayerPieceBitboard(0).bitCount +
+        this.board.getPlayerPieceBitboard(1).bitCount;
+      if (timeControl.timeIncrement > 0) {
+        this.maxSearchTime =
+          timeControl.timeIncrement +
+          Math.trunc(
+            timeControl.activeTimeLeft /
+              Math.min(
+                this.startingPieceCount[0]! + this.startingPieceCount[1]! - 24,
+                pieceCount + 2,
+              ),
+          );
+        this.absoluteMaxSearchTime = Math.max(
+          Math.trunc(timeControl.activeTimeLeft / 6),
+          timeControl.timeIncrement - 100,
+        );
+      } else {
+        this.maxSearchTime = Math.trunc(
+          timeControl.activeTimeLeft /
+            Math.min(
+              this.startingPieceCount[0]! + this.startingPieceCount[1]! - 10,
+              pieceCount + 6,
+            ),
+        );
+        this.absoluteMaxSearchTime = Math.trunc(timeControl.activeTimeLeft / 6);
+      }
+    }
+  }
+
+  /** Decide whether to run another iterative-deepening iteration. */
+  protected shouldDeepen(
+    timeControl: TimeControl,
+    score: number,
+    scorePreviousIteration: number,
+    pv: PV,
+  ): boolean {
+    let deepen = this.idepth / ONEPLY < MAX_PLY - 1;
+    if (!timeControl.infinite) {
+      const timeUsed = Date.now() - this.thinkStartTime;
+      if (this.exactMaxTime > 0) {
+        if (timeUsed > (this.exactMaxTime * 2) / 3) deepen = false;
+      } else if (this.maxSearchTime > 0 || this.absoluteMaxSearchTime > 0) {
+        let aggressiveness = timeControl.timeIncrement > 0 ? 36 : 34;
+        if (score < scorePreviousIteration - 150) {
+          aggressiveness += 8;
+        } else if (score > 150) {
+          aggressiveness -= Math.min(Math.trunc((score - 150) / 10), 8);
+        }
+        let bestMove = pv.get(1);
+        for (let x = Math.min(this.idepth / ONEPLY - 2, 3); x >= 0; x--) {
+          if (this.previousBestMoves[x] !== bestMove) {
+            aggressiveness = Math.trunc((aggressiveness * 6) / 5);
+            bestMove = this.previousBestMoves[x]!;
+          }
+        }
+        if (
+          timeUsed > (this.maxSearchTime * aggressiveness) / 120 ||
+          timeUsed > this.absoluteMaxSearchTime
+        ) {
+          deepen = false;
+        }
+      }
+    }
+    if (timeControl.plyLimit > 0 && deepen) {
+      deepen = this.idepth < timeControl.plyLimit * ONEPLY;
+    } else if (timeControl.nodeLimit > 0 && deepen) {
+      deepen = this.statistics.nodes * 2 < timeControl.nodeLimit;
+    }
+    return deepen;
+  }
+
+  /** Build and emit a {@link SearchInfo} for a completed iteration. */
+  protected emitSearchInfo(idepth: number, score: number): void {
+    if (this.onSearchInfo === null) return;
+    const elapsed = Math.max(Date.now() - this.thinkStartTime, 1);
+    const pvLine: string[] = [];
+    for (let x = 1; this.searchStack[1]!.pv.get(x) !== 0; x++) {
+      pvLine.push(this.describeMoveHash(this.searchStack[1]!.pv.get(x)));
+    }
+    this.onSearchInfo({
+      depth: idepth / ONEPLY,
+      score,
+      nodes: this.statistics.nodes,
+      nps: Math.trunc((this.statistics.nodes * 1000) / elapsed),
+      pv: pvLine,
+    });
+  }
+
+  /** Coordinate notation for a packed move hash (used for PV display). */
+  describeMoveHash(moveHash: number): string {
+    const from = this.getSquareNotation(Movement.fromSquareFromHash(moveHash));
+    const to = this.getSquareNotation(Movement.toSquareFromHash(moveHash));
+    return from + to;
+  }
+
+  /** Search every root move; returns the best score. */
+  searchRoot(alpha: number, beta: number, depth: number): number {
+    let moveNumber = 0;
+    let normalMoveCount = 0;
+    const extension = this.getExtension(1);
+    if (depth < ONEPLY) depth += extension;
+
+    const nodesPerMove = new Map<number, number>();
+    this.moveLists[1]!.restart(this.searchStack[1]!.pv.get(1));
+
+    const movingSide = this.currentSide;
+    while (!this.abortSearchFlag && this.moveLists[1]!.makeNextMove()) {
+      this.statistics.nodes++;
+      const currentMove = this.moveLists[1]!.currentMove;
+      const startNodeCount = this.statistics.nodes;
+      this.searchPath[1] = currentMove.toMovement();
+      if ((currentMove.moveType & MoveType.CaptureProperty) === 0) normalMoveCount++;
+
+      let score: number;
+      if (moveNumber < 1) {
+        score =
+          this.currentSide !== movingSide
+            ? -this.searchPV(-beta, -alpha, depth - ONEPLY, 2)
+            : this.searchPV(alpha, beta, depth - ONEPLY, 2);
+      } else {
+        const reduction =
+          depth >= 2 * ONEPLY &&
+          moveNumber > 4 &&
+          normalMoveCount > 1 &&
+          currentMove.moveType === MoveType.StandardMove &&
+          extension === 0
+            ? Math.min(Math.trunc(Math.max(depth - 2, 0) / 4), Math.trunc(Math.max(moveNumber - 4, 0) / 3)) +
+              Math.min(
+                Math.trunc(Math.max(depth - 2, 0) / 5),
+                Math.trunc((Math.max(moveNumber - 2, 0) * 2) / 3),
+              ) +
+              Math.trunc(moveNumber / 16)
+            : 0;
+        score =
+          this.currentSide !== movingSide
+            ? -this.search(-alpha, depth - ONEPLY - reduction, 2, true, NodeType.Cut)
+            : this.search(beta, depth - ONEPLY - reduction, 2, true, NodeType.Cut);
+        if (reduction > 0 && score > alpha) {
+          score =
+            this.currentSide !== movingSide
+              ? -this.search(-alpha, depth - ONEPLY, 2, true, NodeType.Cut)
+              : this.search(beta, depth - ONEPLY, 2, true, NodeType.Cut);
+        }
+        if (score > alpha) {
+          score =
+            this.currentSide !== movingSide
+              ? -this.searchPV(-beta, -alpha, depth - ONEPLY, 2)
+              : this.searchPV(alpha, beta, depth - ONEPLY, 2);
+        }
+      }
+      this.moveLists[1]!.unmakeMove();
+      if (this.abortSearchFlag) break;
+
+      nodesPerMove.set(
+        currentMove.hash,
+        Math.trunc((this.statistics.nodes - startNodeCount) / depth),
+      );
+      if (score > alpha) {
+        alpha = score;
+        this.updatePV(1);
+      }
+      moveNumber++;
+    }
+
+    if (!this.abortSearchFlag && depth >= 3 * ONEPLY) {
+      this.moveLists[1]!.reorderMoves(nodesPerMove);
+    }
+    return alpha;
+  }
+
+  /** Full-window (principal-variation) search. */
+  searchPV(alpha: number, beta: number, depth: number, ply: number): number {
+    const response = this.testForWinLossDraw(this.currentSide, ply);
+    if (response !== MoveEventResponse.NotHandled) {
+      if (response === MoveEventResponse.GameDrawn) return 0;
+      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
+      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
+    }
+    if (this.statistics.nodes % 1024 === 0) {
+      this.doBookkeeping();
+      if (this.abortSearchFlag) return 0;
+    }
+
+    const extension = this.getExtension(ply);
+    if (depth < ONEPLY || ply < this.idepth * 2) depth += extension;
+    if (depth < ONEPLY) return this.qsearch(alpha, beta, 0, ply);
+
+    this.searchStack[ply]!.pv.set(ply, 0);
+    this.searchStack[ply + 1]!.pv.set(ply, 0);
+
+    let hashtableMove = 0;
+    const hash = this.hashtable!.lookup(this.getPositionHashCode(ply));
+    if (hash !== null) {
+      hashtableMove = hash.moveHash;
+      if (hash.depth >= depth && hash.type === HashType.Exact) {
+        if (hash.score >= beta) this.saveKillerHash(ply, hash.moveHash);
+        return this.scoreFromHashtable(hash.score, ply);
+      }
+    }
+
+    const evalScore = this.evaluate();
+    this.searchStack[ply]!.eval = evalScore;
+    if (depth === MAX_PLY - 1) return evalScore;
+
+    const improving = ply < 3 || this.searchStack[ply]!.eval > this.searchStack[ply - 2]!.eval;
+    if (
+      depth < 4 * ONEPLY &&
+      evalScore < INFINITY - MAX_PLY &&
+      evalScore - this.futilityMargin(depth, improving) >= beta
+    ) {
+      return evalScore;
+    }
+
+    if (
+      Movement.moveTypeFromHash(hashtableMove) === MoveType.Invalid &&
+      depth >= 5 * ONEPLY &&
+      extension === 0
+    ) {
+      this.searchPV(alpha, beta, depth - 2 * ONEPLY, ply);
+      hashtableMove = this.searchStack[ply]!.pv.get(ply);
+    }
+
+    this.ply = ply;
+    this.generateMoves(this.currentSide, ply, hashtableMove);
+
+    let score = -INFINITY;
+    let bestScore = -INFINITY;
+    let moveNumber = 0;
+    let normalMoveCount = 0;
+    const movingSide = this.currentSide;
+    while (alpha < beta && this.moveLists[ply]!.makeNextMove()) {
+      this.statistics.nodes++;
+      const currentMove = this.moveLists[ply]!.currentMove;
+      if (this.weakening > 0 && this.weakeningBlind()) {
+        this.moveLists[ply]!.unmakeMove();
+        continue;
+      }
+      this.searchPath[ply] = currentMove.toMovement();
+      if (currentMove.moveType === MoveType.StandardMove) normalMoveCount++;
+
+      if (moveNumber === 0) {
+        score =
+          this.currentSide !== movingSide
+            ? -this.searchPV(-beta, -alpha, depth - ONEPLY, ply + 1)
+            : this.searchPV(alpha, beta, depth - ONEPLY, ply + 1);
+        this.moveLists[ply]!.unmakeMove();
+      } else {
+        const reduce =
+          depth >= 2 * ONEPLY &&
+          moveNumber > 5 &&
+          normalMoveCount > 1 &&
+          currentMove.moveType === MoveType.StandardMove &&
+          extension === 0 &&
+          currentMove.hash !==
+            this.countermoves[this.searchPath[ply - 1]!.fromSquare]![
+              this.searchPath[ply - 1]!.toSquare
+            ];
+        let reduction = reduce ? this.lateMoveReduction(depth, moveNumber) : 0;
+        reduction = this.adjustReductionForHistory(reduction, currentMove);
+        if (reduction > 0 && this.weakening > 0) {
+          reduction += Math.min(Math.trunc((moveNumber - 3) / 4), Math.trunc(this.weakening / 4) + 1);
+        }
+        const reducedDepth =
+          reduction > 0 ? Math.max(depth - ONEPLY - reduction, ONEPLY) : depth - ONEPLY;
+        const actualReduction = depth - ONEPLY - reducedDepth;
+
+        score =
+          this.currentSide !== movingSide
+            ? -this.search(-alpha, reducedDepth, ply + 1, true, NodeType.Cut)
+            : this.search(beta, reducedDepth, ply + 1, true, NodeType.Cut);
+        if (actualReduction > 0 && score > alpha) {
+          score =
+            this.currentSide !== movingSide
+              ? -this.search(-alpha, depth - ONEPLY, ply + 1, true, NodeType.Cut)
+              : this.search(beta, depth - ONEPLY, ply + 1, true, NodeType.Cut);
+        }
+        if (score > alpha && score < beta) {
+          score =
+            this.currentSide !== movingSide
+              ? -this.searchPV(-beta, -alpha, depth - ONEPLY, ply + 1)
+              : this.searchPV(alpha, beta, depth - ONEPLY, ply + 1);
+        }
+        this.moveLists[ply]!.unmakeMove();
+      }
+      if (this.abortSearchFlag) return 0;
+
+      if (score > bestScore) {
+        bestScore = score;
+        if (score > alpha) {
+          alpha = score;
+          this.updatePV(ply);
+          if (score >= beta) {
+            this.saveKillerMove(ply, currentMove);
+            if (depth > 2 * ONEPLY) this.updateHistoryCountersMove(depth, currentMove);
+            if (ply > 1) {
+              this.countermoves[this.searchPath[ply - 1]!.fromSquare]![
+                this.searchPath[ply - 1]!.toSquare
+              ] = currentMove.hash;
+            }
+          }
+        }
+      }
+      moveNumber++;
+    }
+
+    if (moveNumber === 0) {
+      const result = this.noMovesResult(this.currentSide, ply);
+      if (result === MoveEventResponse.GameWon) return INFINITY - ply;
+      if (result === MoveEventResponse.GameLost) return -INFINITY + ply;
+      return 0;
+    }
+
+    const positionHash = this.getPositionHashCode(ply);
+    if (bestScore < alpha) {
+      this.hashtable!.store(positionHash, this.scoreToHashtable(bestScore, ply), depth, 0, HashType.UpperBound);
+    } else if (bestScore >= beta) {
+      this.hashtable!.store(
+        positionHash,
+        this.scoreToHashtable(bestScore, ply),
+        depth,
+        this.searchStack[ply]!.pv.get(ply),
+        HashType.LowerBound,
+      );
+    } else {
+      this.hashtable!.store(
+        positionHash,
+        this.scoreToHashtable(bestScore, ply),
+        depth,
+        this.searchStack[ply]!.pv.get(ply),
+        HashType.Exact,
+      );
+    }
+    return bestScore;
+  }
+
+  /** Zero-window (scout) search. */
+  search(
+    beta: number,
+    depth: number,
+    ply: number,
+    tryNullMove: boolean,
+    nodeType: NodeType,
+  ): number {
+    const response = this.testForWinLossDraw(this.currentSide, ply);
+    if (response !== MoveEventResponse.NotHandled) {
+      if (response === MoveEventResponse.GameDrawn) return 0;
+      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
+      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
+    }
+    if (this.statistics.nodes % 1024 === 0) {
+      this.doBookkeeping();
+      if (this.abortSearchFlag) return 0;
+    }
+
+    let extension = 0;
+    if (depth < ONEPLY || ply < this.idepth * 2) {
+      extension = this.getExtension(ply);
+      depth += extension;
+    }
+    if (depth < ONEPLY) return this.qsearch(beta - 1, beta, 0, ply);
+
+    this.searchStack[ply]!.pv.set(ply, 0);
+    this.searchStack[ply + 1]!.pv.set(ply, 0);
+
+    let hashtableMove = 0;
+    const hash = this.hashtable!.lookup(this.getPositionHashCode(ply));
+    if (hash !== null) {
+      hashtableMove = hash.moveHash;
+      if (
+        (hash.depth >= depth ||
+          hash.score >= Math.max(INFINITY - 100, beta) ||
+          hash.score < Math.min(-INFINITY + 100, beta)) &&
+        ((hash.type === HashType.LowerBound && hash.score >= beta) ||
+          (hash.type === HashType.UpperBound && hash.score < beta) ||
+          hash.type === HashType.Exact)
+      ) {
+        if (hash.score >= beta) {
+          this.saveKillerHash(ply, hash.moveHash);
+          if (depth > 2 * ONEPLY) this.updateHistoryCountersHash(depth, hash.moveHash);
+          if (ply > 1) {
+            this.countermoves[this.searchPath[ply - 1]!.fromSquare]![
+              this.searchPath[ply - 1]!.toSquare
+            ] = hash.moveHash;
+          }
+          this.updatePV(ply);
+        }
+        return this.scoreFromHashtable(hash.score, ply);
+      }
+    }
+
+    const evalScore = this.evaluate();
+    this.searchStack[ply]!.eval = evalScore;
+    if (depth === MAX_PLY - 1) return evalScore;
+
+    // Razoring.
+    if (
+      depth < 3 * ONEPLY + Math.trunc(this.weakening / 5) &&
+      extension === 0 &&
+      evalScore +
+        this.razorMargin[Math.trunc(depth / ONEPLY)]! -
+        Math.trunc(this.weakening / 3) * (24 - depth * 2) <=
+        beta - 1
+    ) {
+      if (depth <= ONEPLY) return this.qsearch(beta - 1, beta, 0, ply);
+      const rAlpha = beta - this.razorMargin[Math.trunc(depth / ONEPLY)]! - 1;
+      const val = this.qsearch(rAlpha, rAlpha + 1, 0, ply);
+      if (val <= rAlpha) return val;
+    }
+
+    // Child-node futility pruning.
+    const improving = ply < 3 || this.searchStack[ply]!.eval > this.searchStack[ply - 2]!.eval;
+    if (
+      depth < 4 * ONEPLY &&
+      evalScore < INFINITY - MAX_PLY &&
+      evalScore - this.futilityMargin(depth, improving) >= beta
+    ) {
+      return evalScore;
+    }
+
+    // Null-move pruning.
+    let nullMoveMatesUs = false;
+    const canNull =
+      tryNullMove &&
+      extension === 0 &&
+      this.board.getPlayerPieceBitboard(0).bitCount >= 2 &&
+      this.board.getPlayerPieceBitboard(1).bitCount >= 2 &&
+      this.board.getPlayerPieceBitboard(0).bitCount +
+        this.board.getPlayerPieceBitboard(1).bitCount >=
+        5 &&
+      beta < INFINITY - 100 &&
+      beta > -INFINITY + 100;
+    const nullReduction = (depth / ONEPLY >= 7 ? 3 : 2) * ONEPLY;
+    if (
+      canNull &&
+      depth >= nullReduction + ONEPLY + ONEPLY &&
+      this.board.getMidgameMaterialEvalTotal() + (nodeType === NodeType.All ? 350 : 500) > beta
+    ) {
+      const nullMoveSide = this.currentSide;
+      this.moveLists[ply]!.makeNullMove();
+      this.searchPath[ply] = new Movement(0, 0, 0, MoveType.NullMove);
+      const nullScore =
+        this.currentSide !== nullMoveSide
+          ? -this.search(-(beta - 1), depth - ONEPLY - nullReduction, ply + 1, false, nodeType)
+          : this.search(beta, depth - ONEPLY - nullReduction, ply + 1, false, nodeType);
+      this.moveLists[ply]!.unmakeNullMove();
+      if (nullScore >= beta) {
+        return nullScore > INFINITY - MAX_PLY ? beta : nullScore;
+      }
+      if (nullScore < -INFINITY + MAX_PLY) nullMoveMatesUs = true;
+    }
+
+    this.ply = ply;
+    this.generateMoves(this.currentSide, ply, hashtableMove);
+
+    let score = -INFINITY;
+    let bestScore = -INFINITY;
+    let moveNumber = 0;
+    let normalMoveCount = 0;
+    const pruningEligible =
+      depth - ONEPLY < 3 * ONEPLY &&
+      this.board.getEndgameMaterialEval(this.currentSide) >= 375 &&
+      extension === 0;
+    const movingSide = this.currentSide;
+
+    while (score < beta && this.moveLists[ply]!.makeNextMove()) {
+      this.statistics.nodes++;
+      const currentMove = this.moveLists[ply]!.currentMove;
+      if (this.weakening > 0 && this.weakeningBlind()) {
+        this.moveLists[ply]!.unmakeMove();
+        continue;
+      }
+      this.searchPath[ply] = currentMove.toMovement();
+      if (currentMove.moveType === MoveType.StandardMove) normalMoveCount++;
+
+      // Pruning.
+      if (pruningEligible) {
+        let prune = false;
+        if (
+          moveNumber > 1 &&
+          currentMove.moveType === MoveType.StandardMove &&
+          evalScore +
+            this.board.calculateStandardMovePST(currentMove.fromSquare, currentMove.toSquare) +
+            (depth < 2 * ONEPLY ? (currentMove.pieceMoved!.pieceType.isPawn ? 50 : 30) : 200) <
+            beta
+        ) {
+          const newEval = depth < 2 * ONEPLY ? this.evaluate() : beta - 1;
+          if (newEval < beta && this.canPruneMove(currentMove)) prune = true;
+        }
+        if (
+          !prune &&
+          depth < 3 * ONEPLY &&
+          moveNumber > (depth < 2 * ONEPLY ? 14 : 18) + (improving ? 3 : 0) &&
+          currentMove.moveType === MoveType.StandardMove
+        ) {
+          prune = true;
+        }
+        if (prune && this.canPruneMove(currentMove) && this.getExtension(ply + 1) === 0) {
+          this.moveLists[ply]!.unmakeMove();
+          continue;
+        }
+      }
+
+      // Late move reductions.
+      const reduce =
+        depth >= 2 * ONEPLY &&
+        moveNumber > 4 &&
+        normalMoveCount > 1 &&
+        currentMove.moveType === MoveType.StandardMove &&
+        !nullMoveMatesUs &&
+        extension === 0 &&
+        currentMove.hash !==
+          this.countermoves[this.searchPath[ply - 1]!.fromSquare]![
+            this.searchPath[ply - 1]!.toSquare
+          ];
+      let reduction = !reduce
+        ? 0
+        : Math.min(Math.trunc(Math.max(depth - 2, 0) / 3), Math.trunc(Math.max(moveNumber - 2, 0) / 3)) +
+          Math.min(
+            Math.trunc(Math.max(depth - 2, 0) / 5),
+            Math.trunc((Math.max(moveNumber - 2, 0) * 2) / 3),
+          ) +
+          Math.trunc(moveNumber / 16) +
+          (nodeType === NodeType.Cut ? 2 : 0) +
+          (improving ? 0 : 1);
+      reduction = this.adjustReductionForHistory(reduction, currentMove);
+      if (reduction > 0 && this.weakening > 0) {
+        reduction += Math.min(Math.trunc((moveNumber - 3) / 4), Math.trunc(this.weakening / 4) + 1);
+      }
+      const reducedDepth =
+        reduction > 0 ? Math.max(depth - ONEPLY - reduction, ONEPLY) : depth - ONEPLY;
+      const actualReduction = depth - ONEPLY - reducedDepth;
+
+      const childType = nodeType === NodeType.Cut ? NodeType.All : NodeType.Cut;
+      score =
+        this.currentSide !== movingSide
+          ? -this.search(-(beta - 1), reducedDepth, ply + 1, true, childType)
+          : this.search(beta, reducedDepth, ply + 1, true, childType);
+      if (actualReduction > 0 && score >= beta) {
+        score =
+          this.currentSide !== movingSide
+            ? -this.search(-(beta - 1), depth - ONEPLY, ply + 1, true, childType)
+            : this.search(beta, depth - ONEPLY, ply + 1, true, childType);
+      }
+      if (
+        currentMove.moveType === MoveType.StandardMove &&
+        depth > 2 * ONEPLY &&
+        score < beta &&
+        nodeType === NodeType.Cut
+      ) {
+        const p = currentMove.player;
+        const t = currentMove.pieceMoved!.typeNumber;
+        this.butterflyCounters[p]![t]![currentMove.toSquare]! += Math.trunc(depth / ONEPLY);
+      }
+      this.moveLists[ply]!.unmakeMove();
+      if (this.abortSearchFlag) return 0;
+
+      if (score > bestScore) {
+        bestScore = score;
+        const positionHash = this.getPositionHashCode(ply);
+        if (score >= beta) {
+          this.saveKillerMove(ply, currentMove);
+          if (depth > 2 * ONEPLY) this.updateHistoryCountersMove(depth, currentMove);
+          if (ply > 1) {
+            this.countermoves[this.searchPath[ply - 1]!.fromSquare]![
+              this.searchPath[ply - 1]!.toSquare
+            ] = currentMove.hash;
+          }
+          this.updatePV(ply);
+          this.hashtable!.store(
+            positionHash,
+            this.scoreToHashtable(score, ply),
+            depth,
+            currentMove.hash,
+            HashType.LowerBound,
+          );
+        } else {
+          this.hashtable!.store(
+            positionHash,
+            this.scoreToHashtable(score, ply),
+            depth,
+            0,
+            HashType.UpperBound,
+          );
+        }
+      }
+      moveNumber++;
+    }
+
+    if (moveNumber === 0) {
+      const result = this.noMovesResult(this.currentSide, ply);
+      if (result === MoveEventResponse.GameWon) return INFINITY - ply;
+      if (result === MoveEventResponse.GameLost) return -INFINITY + ply;
+      return 0;
+    }
+    return bestScore;
+  }
+
+  /** Quiescence search — extends the search through captures only. */
+  qsearch(
+    alpha: number,
+    beta: number,
+    depth: number,
+    ply: number,
+    recaptureSquare = -1,
+  ): number {
+    const response = this.testForWinLossDraw(this.currentSide, ply);
+    if (response !== MoveEventResponse.NotHandled) {
+      if (response === MoveEventResponse.GameDrawn) return 0;
+      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
+      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
+    }
+
+    this.searchStack[ply]!.pv.set(ply, 0);
+    this.searchStack[ply + 1]!.pv.set(ply, 0);
+
+    const hash = this.hashtable!.lookup(this.getPositionHashCode(ply));
+    if (hash !== null) {
+      if (
+        (hash.type === HashType.LowerBound && hash.score >= beta) ||
+        (hash.type === HashType.UpperBound && hash.score < beta)
+      ) {
+        return this.scoreFromHashtable(hash.score, ply);
+      }
+    }
+
+    if (this.statistics.nodes % 4096 === 0) {
+      this.doBookkeeping();
+      if (this.abortSearchFlag) return 0;
+    }
+
+    const pvNode = alpha !== beta - 1;
+    const inCheck = this.getExtension(ply) > 0;
+    const oldAlpha = alpha;
+    let evalScore = this.evaluate();
+    // Allow a stand-pat even in check after 8 plies of q-search, to bound the
+    // tree in variants where checks proliferate.
+    if (inCheck && depth < -8 * ONEPLY) evalScore = -INFINITY;
+    let score = evalScore;
+
+    if (depth === MAX_PLY - 1) return score;
+    if (score >= beta) return score;
+
+    let bestScore = score;
+    if (bestScore > alpha) alpha = bestScore;
+
+    this.ply = ply;
+    this.generateMoves(this.currentSide, ply, 0, !inCheck);
+
+    const movingSide = this.currentSide;
+    while (
+      alpha < beta &&
+      this.moveLists[ply]!.makeNextMove(inCheck ? 0 : alpha - evalScore - 50)
+    ) {
+      this.statistics.nodes++;
+      this.statistics.qNodes++;
+      const currentMove = this.moveLists[ply]!.currentMove;
+
+      if (!inCheck && depth < -4 * ONEPLY && currentMove.toSquare !== recaptureSquare) {
+        this.moveLists[ply]!.unmakeMove();
+        continue;
+      }
+      if (this.weakening > 0 && this.weakeningBlind()) {
+        this.moveLists[ply]!.unmakeMove();
+        continue;
+      }
+      this.searchPath[ply] = currentMove.toMovement();
+
+      score =
+        this.currentSide !== movingSide
+          ? -this.qsearch(-beta, -alpha, depth - ONEPLY, ply + 1, currentMove.toSquare)
+          : this.qsearch(alpha, beta, depth - ONEPLY, ply + 1, currentMove.toSquare);
+      this.moveLists[ply]!.unmakeMove();
+      if (this.abortSearchFlag) return 0;
+
+      if (score > bestScore) {
+        bestScore = score;
+        if (score > alpha) {
+          alpha = score;
+          if (pvNode) this.updatePV(ply);
+        }
+      }
+    }
+
+    if (inCheck && bestScore === -INFINITY) return -INFINITY + ply;
+
+    if (alpha - beta !== 1) {
+      const positionHash = this.getPositionHashCode(ply);
+      if (bestScore < beta) {
+        if (bestScore > evalScore) {
+          this.hashtable!.store(
+            positionHash,
+            this.scoreToHashtable(score, ply),
+            0,
+            0,
+            pvNode && bestScore > oldAlpha ? HashType.Exact : HashType.UpperBound,
+          );
+        }
+      } else {
+        this.hashtable!.store(
+          positionHash,
+          this.scoreToHashtable(score, ply),
+          0,
+          0,
+          HashType.LowerBound,
+        );
+      }
+    }
+    return bestScore;
+  }
+
+  // *** SEARCH HELPERS *** //
+
+  /** True if Weakening should make the engine "blind" to the current move. */
+  protected weakeningBlind(): boolean {
+    const bits = Number((this.board.hashCode >> BigInt(this.weakeningHashShift)) & 0xffn);
+    return bits < this.weakening * 2;
+  }
+
+  /** Base late-move reduction amount for a given depth and move number. */
+  protected lateMoveReduction(depth: number, moveNumber: number): number {
+    return (
+      Math.min(Math.trunc(Math.max(depth - 2, 0) / 4), Math.trunc(Math.max(moveNumber - 4, 0) / 3)) +
+      Math.min(
+        Math.trunc(Math.max(depth - 2, 0) / 5),
+        Math.trunc((Math.max(moveNumber - 2, 0) * 2) / 3),
+      ) +
+      Math.trunc(moveNumber / 16)
+    );
+  }
+
+  /** Reduce the reduction for moves with a good history score. */
+  protected adjustReductionForHistory(reduction: number, move: MoveInfo): number {
+    if (reduction <= 0 || move.pieceMoved === null) return reduction;
+    const p = move.player;
+    const t = move.pieceMoved.typeNumber;
+    const history = Math.trunc(
+      this.historyCounters[p]![t]![move.toSquare]! /
+        Math.max(this.butterflyCounters[p]![t]![move.toSquare]!, 1),
+    );
+    if (history > 0) {
+      reduction--;
+      if (history > this.currentMaxHistoryScore / (this.idepth / ONEPLY)) reduction = 0;
+    }
+    return reduction;
+  }
+
+  /** Whether this variant permits pruning the given move. Override as needed. */
+  canPruneMove(_move: MoveInfo): boolean {
+    return true;
+  }
+
+  protected scoreFromHashtable(score: number, ply: number): number {
+    if (score >= INFINITY - MAX_PLY) return score - ply;
+    if (score <= -INFINITY + MAX_PLY) return score + ply;
+    return score;
+  }
+
+  protected scoreToHashtable(score: number, ply: number): number {
+    if (score >= INFINITY - MAX_PLY) return score + ply;
+    if (score <= -INFINITY + MAX_PLY) return score - ply;
+    return score;
+  }
+
+  /** Sum the rules' positional search extensions, capped at one ply. */
+  protected getExtension(ply: number): number {
+    let extension = 0;
+    for (const rule of this.rules) {
+      extension += rule.positionalSearchExtension(this.currentSide, ply);
+    }
+    return extension > ONEPLY ? ONEPLY : extension;
+  }
+
+  protected saveKillerMove(ply: number, move: MoveInfo): void {
+    if (move.moveType === MoveType.StandardMove && move.hash !== this.killers1[ply]) {
+      this.killers2[ply] = this.killers1[ply]!;
+      this.killers1[ply] = move.hash;
+    }
+  }
+
+  protected saveKillerHash(ply: number, moveHash: number): void {
+    if (
+      Movement.moveTypeFromHash(moveHash) === MoveType.StandardMove &&
+      moveHash !== this.killers1[ply]
+    ) {
+      this.killers2[ply] = this.killers1[ply]!;
+      this.killers1[ply] = moveHash;
+    }
+  }
+
+  protected updateHistoryCountersMove(depth: number, move: MoveInfo): void {
+    if (move.moveType !== MoveType.StandardMove || move.pieceMoved === null) return;
+    const p = move.pieceMoved.player;
+    const t = move.pieceMoved.typeNumber;
+    const d = Math.trunc(depth / ONEPLY);
+    this.historyCounters[p]![t]![move.toSquare]! += (d + 2) * (d + 1);
+    this.currentMaxHistoryScore = Math.max(
+      this.currentMaxHistoryScore,
+      Math.trunc(this.historyCounters[p]![t]![move.toSquare]! / this.butterflyCounters[p]![t]![move.toSquare]!),
+    );
+  }
+
+  protected updateHistoryCountersHash(depth: number, moveHash: number): void {
+    if (Movement.moveTypeFromHash(moveHash) !== MoveType.StandardMove) return;
+    const player = Movement.playerFromHash(moveHash);
+    const piece = this.board.pieceAt(Movement.fromSquareFromHash(moveHash));
+    if (piece === null) return;
+    const t = piece.typeNumber;
+    const toSquare = Movement.toSquareFromHash(moveHash);
+    const d = Math.trunc(depth / ONEPLY);
+    this.historyCounters[player]![t]![toSquare]! += (d + 2) * (d + 1);
+    this.currentMaxHistoryScore = Math.max(
+      this.currentMaxHistoryScore,
+      Math.trunc(this.historyCounters[player]![t]![toSquare]! / this.butterflyCounters[player]![t]![toSquare]!),
+    );
+  }
+
+  protected futilityMargin(depth: number, improving: boolean): number {
+    return improving
+      ? Math.trunc((75 * depth) / ONEPLY)
+      : Math.trunc((125 * depth) / ONEPLY);
+  }
+
+  /** Copy the child PV onto this ply's PV, prefixed by the current move. */
+  protected updatePV(ply: number): void {
+    this.searchStack[ply]!.pv.set(ply, this.moveLists[ply]!.currentMove.hash);
+    let p = ply + 1;
+    for (; this.searchStack[ply + 1]!.pv.get(p) !== 0; p++) {
+      this.searchStack[ply]!.pv.set(p, this.searchStack[ply + 1]!.pv.get(p));
+    }
+    this.searchStack[ply]!.pv.set(p, this.searchStack[ply + 1]!.pv.get(p));
+  }
+
+  /** Periodic time / node-limit check during the search. */
+  protected doBookkeeping(): void {
+    const tc = this.searchTimeControl;
+    if (tc === null || tc.infinite) return;
+    const timeUsed = Date.now() - this.thinkStartTime;
+    if (
+      (this.absoluteMaxSearchTime > 0 && timeUsed > this.absoluteMaxSearchTime) ||
+      (this.exactMaxTime > 0 && timeUsed > this.exactMaxTime) ||
+      (tc.nodeLimit > 0 && this.statistics.nodes > tc.nodeLimit)
+    ) {
+      this.abortSearchFlag = true;
+    }
+  }
+
+  /** Format a search score for display (`M5`, `-M3`, or a pawn count). */
+  formatScoreForDisplay(score: number): string {
+    if (score > INFINITY - MAX_PLY) {
+      if (score === INFINITY - 2) return 'Mate';
+      return `M${Math.trunc((INFINITY - (score + 2)) / 2)}`;
+    }
+    if (score < -INFINITY + MAX_PLY) {
+      return `-M${Math.trunc((INFINITY + (score - 1)) / 2)}`;
+    }
+    return (score / 100).toFixed(2);
   }
 
   // *** HELPERS *** //

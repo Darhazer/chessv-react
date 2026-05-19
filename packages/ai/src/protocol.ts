@@ -24,7 +24,12 @@ export interface TimeControl {
 /** Messages sent from the UI thread to the worker. */
 export type ToWorker =
   | { type: 'init'; variantId: string; options?: Record<string, unknown> }
-  | { type: 'position'; fen: string; moves?: string[] }
+  /**
+   * Set the position by replaying moves from the variant's start position.
+   * Each entry is a packed 32-bit `Movement` hash. Replaying (rather than
+   * loading a FEN) keeps the worker's game state exactly consistent.
+   */
+  | { type: 'position'; moveHashes: number[] }
   | { type: 'go'; timeControl: TimeControl }
   | { type: 'stop' }
   | { type: 'setoption'; name: string; value: unknown };
@@ -40,5 +45,10 @@ export type FromWorker =
       nps: number;
       pv: string[];
     }
-  | { type: 'bestmove'; move: string }
+  /**
+   * The chosen move, as a packed 32-bit `Movement` hash. The UI reconstructs
+   * it with `Movement.fromHash` and plays it with `Game.makeMovement`.
+   * `moveHash` is 0 when the search produced no move (game already over).
+   */
+  | { type: 'bestmove'; moveHash: number }
   | { type: 'error'; message: string };
