@@ -1,0 +1,17 @@
+{
+  "name": "@chessv/variants",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@chessv/engine": "workspace:*",
+    "@chessv/pieces": "workspace:*",
+    "@chessv/rules": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

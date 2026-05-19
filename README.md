@@ -1,0 +1,54 @@
+# ChessV Web
+
+A browser port of **[ChessV](http://www.chessv.org/)** — a powerful chess-variant
+engine and GUI originally written in C#/.NET by Greg Strong. This project reimplements
+ChessV in TypeScript and React so its 160 chess variants can be played in the browser.
+
+## Status
+
+Early development. See `~/.claude/plans/` for the full porting plan and roadmap.
+
+| Phase | Scope | Status |
+| ----- | ----- | ------ |
+| 0 | Monorepo scaffold | in progress |
+| 1 | Core engine + Standard Chess playable | pending |
+| 2 | AI engine (Web Worker) | pending |
+| 3 | All 160 variants | pending |
+| 4 | Themes, PGN, polish | pending |
+| 5 | Hardening / parity testing | pending |
+
+## Workspace layout
+
+```
+packages/
+  engine/    @chessv/engine    core game model: board, pieces, moves, rules, FEN
+  rules/     @chessv/rules     pluggable Rule subclasses (castling, en passant, ...)
+  pieces/    @chessv/pieces    piece-type definitions
+  variants/  @chessv/variants  the 160 variant definitions + catalog registry
+  ai/        @chessv/ai        alpha-beta search engine + Web Worker
+  ui/        @chessv/app       React + Vite web client
+tools/       build scripts (asset conversion, perft comparison)
+test/        cross-package tests (perft fixtures)
+```
+
+## Development
+
+```sh
+pnpm install
+pnpm dev          # run the web client
+pnpm typecheck    # type-check every package
+pnpm test         # run unit + perft tests
+```
+
+## License
+
+ChessV is free software licensed under the **GNU General Public License, version 3
+or (at your option) any later version**. This web port is a derivative work and is
+distributed under the same terms — see [`LICENSE`](./LICENSE) for the full text.
+
+Original ChessV is Copyright © 2012–2019 Greg Strong. The ChessV website is
+<http://www.chessv.org/>.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.

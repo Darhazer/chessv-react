@@ -1,0 +1,34 @@
+{
+  "name": "chessv",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web port of ChessV — a chess-variant engine and GUI (TypeScript/React)",
+  "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @chessv/app dev",
+    "build": "pnpm --filter @chessv/app build",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:perft": "vitest run test/perft",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "convert-assets": "tsx tools/convert-assets.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

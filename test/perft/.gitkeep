@@ -1,0 +1,2 @@
+Perft fixtures (node counts captured from the .NET ChessV engine) live here,
+one JSON file per variant. Added during Phase 1.
