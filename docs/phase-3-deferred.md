@@ -1,6 +1,6 @@
 # Phase 3 — deferred variants
 
-The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, the **multi-move completion rules**, **pocket drops** and **two-board (Alice) geometry**, unlocking 17 more (clusters 1–5 and 7 below). The remaining ~92 are still blocked on the engine extensions described here.
+The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, the **multi-move completion rules**, **pocket drops**, **two-board (Alice) geometry**, **cylindrical geometry** and the **KingsLeapRule**, unlocking 19 more (clusters 1–7 plus a head start on cluster 8). What remains is a handful of bespoke per-variant ports (cluster 8) and a few unlocking-rules that would each yield one variant — they are documented below as standalone follow-ups rather than blockers.
 
 This document is a checklist for the engine work that would unlock each cluster.
 
@@ -108,15 +108,21 @@ the pocket-square infrastructure generalises naturally.
 
 ---
 
-## 6. Cylindrical / non-rectangular geometry
+## 6. Cylindrical / non-rectangular geometry ✅ DONE (cylindrical)
 
-**Engine work:** the existing `Board` is rectangular only. Cylindrical Chess
-wraps left↔right edges, Omega Chess adds wizard corner squares with their own
-notation/move-generation rules. The likely shape: introduce a `BoardGeometry`
-subclass that customises `buildNextStepMatrix` / `nextSquare` and the
-move-deduplication path. ChessV `Game.deduplicateMoves` flag already exists.
+**Status:** `packages/engine/src/cylindricalBoard.ts` ports
+`CylindricalBoard`. The override of `buildNextStepMatrix` uses modular
+file arithmetic so a step off the a-file lands on the h-file and vice
+versa. `disableSimpleMoveGeneration` is set (multiple paths reach the
+same square; SEE would be wrong) and variants enable `deduplicateMoves`
+to drop the duplicate sliding moves that wrap produces.
 
-**Unlocks (~2):** Cylindrical Chess (8x8), Omega Chess.
+**Unlocked:** Cylindrical Chess (8×8).
+
+**Still deferred:** Omega Chess — its wizard corner squares (104 squares
+on a hybrid 12×12 + 4) need a fresh geometry class with its own square
+notation and a per-piece move generator for the corners. Out of scope
+for this batch.
 
 ---
 
@@ -141,21 +147,22 @@ them the variant is fully playable but loses those niceties.
 
 ---
 
-## 8. Bespoke custom rules / pieces
+## 8. Bespoke custom rules / pieces — partial
 
-Each of these is a one-off and self-contained.
+Each of these is a one-off and self-contained. ✅ marks ones that landed in
+the Phase-3 batches.
 
 | Variant | Source file(s) | Notes |
 | --- | --- | --- |
-| Archchess (10x10) | `ChessV.Games/Rules/KingsLeapRule.cs` | King may leap once per game. |
-| Brouhaha (10x10) | `ChessV.Games/Rules/Brouhaha/` | Custom file notation + border rule. |
-| Odin's Rune Chess (10x10) | `ChessV.Games/Pieces/OdinsRune/`, rules in `Rules/OdinsRune/` | Custom move generators (adjacency-based) for OdinKing, ForestOx, Valkyrie. |
-| Odyssey (12x12) | `ChessV.Games/Rules/Odyssey/` | Assassin trade-restriction rule; multi-char piece notation. |
-| Symmetric Chess (9x8) | `ChessV.Games/Rules/Symmetric/` | Bishop-conversion rule plus the `{bishop-conversion}` FEN field. |
-| Falcon Chess (10x8) | `ChessV.Games/Pieces/MultiPath.cs` | The Falcon is a multi-path piece — port the custom move generator. |
-| Yang Qi (9x10) | `ChessV.Games/Rules/YangQi/` | Custom king-swap rule (and needs Replacement promotion). |
-| Courier Chess Moderno (12x8) | `ChessV.Games/Rules/ExtraMovesForUnmovedPieceRule.cs` | Unmoved-piece extra move. |
-| Chess And A Half (12x12) | `ChessV.Games/Rules/OptionalCaptureByOvertakeRule.cs` | Multi-target capture; plus complex promotion. |
+| ✅ Archchess (10×10) | `Rules/KingsLeapRule.cs` | King may leap once per game. Done. |
+| Brouhaha (10x10) | `Rules/Brouhaha/` | Border rule + conditional move capabilities for Cleric/Scout. |
+| Odin's Rune Chess (10x10) | `Pieces/OdinsRune/`, `Rules/OdinsRune/` | Custom move generators (adjacency-based). |
+| Odyssey (12x12) | `Rules/Odyssey/` | Assassin trade-restriction rule; multi-char piece notation. |
+| Symmetric Chess (9x8) | `Rules/Symmetric/BishopConversionRule.cs` | ~550 lines of bishop-conversion privilege bookkeeping. |
+| Falcon Chess (10x8) | `Pieces/MultiPath.cs` | Multi-path piece needs a custom piece-type subclass. |
+| Yang Qi (9x10) | `Rules/YangQi/` | Custom king-swap rule (+ Replacement promotion). |
+| Courier Chess Moderno (12x8) | `Rules/ExtraMovesForUnmovedPieceRule.cs` | Unmoved-piece extra move + a custom `"3-3"` castling style. |
+| Chess And A Half (12x12) | `Rules/OptionalCaptureByOvertakeRule.cs` | Multi-target capture + complex promotion. |
 
 ---
 
@@ -170,7 +177,9 @@ Tackling the clusters above roughly in this order is the best return on effort:
 4. ✅ **Multi-move turns** — done. 2 variants unlocked.
 5. ✅ **Drops / pockets** — done (single-piece pocket). Pocket Knight unlocked;
    Shogi/Crazyhouse hands extend this naturally.
-6. **Cylindrical geometry** — 1–2 variants.
+6. ✅ **Cylindrical geometry** — done. Cylindrical Chess unlocked.
+   Omega Chess (corner squares) still pending.
 7. ✅ **Multi-board (Alice)** — done. Alice Chess unlocked (castling /
    en passant disabled pending Alice-wrapped rules).
-8. **Bespoke rules** — one variant at a time; do these last.
+8. **Bespoke rules** — ✅ KingsLeapRule + Archchess done; the rest are
+   one-off ports remaining as future work.

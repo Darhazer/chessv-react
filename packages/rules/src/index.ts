@@ -15,6 +15,7 @@ export { FlexibleCastlingRule } from './flexibleCastlingRule.js';
 export { CheckmateRule } from './checkmateRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
+export { KingsLeapRule } from './kingsLeapRule.js';
 export { Move50Rule } from './move50Rule.js';
 export {
   DoubleMoveCompletionRule,

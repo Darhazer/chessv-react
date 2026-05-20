@@ -12,6 +12,7 @@
 import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
 import { ChessWithPockets } from './v8x8/chessWithPockets.js';
+import { CylindricalChess } from './v8x8/cylindricalChess.js';
 import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
 import { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 import { Chess256 } from './v8x8/chess256.js';
@@ -58,6 +59,7 @@ import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
+import { Archchess } from './v10x10/archchess.js';
 import {
   EmperorsGame,
   GrandChess,
@@ -103,6 +105,7 @@ export { RevisedChess } from './v8x8/revisedChess.js';
 export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { ChessWithPockets } from './v8x8/chessWithPockets.js';
+export { CylindricalChess } from './v8x8/cylindricalChess.js';
 export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
 export { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 export { WildCastle } from './v8x8/wildCastle.js';
@@ -137,6 +140,7 @@ export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
+export { Archchess } from './v10x10/archchess.js';
 export {
   EmperorsGame,
   GrandChess,
@@ -402,6 +406,19 @@ registerVariant({
 });
 
 registerVariant({
+  name: 'Cylindrical Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Historic', 'Popular'],
+  invented: 'circa 10th century',
+  inventedBy: 'Unknown',
+  description:
+    "Standard chess but the board's left and right edges are connected — pieces " +
+    'wrap around as if the board were rolled into a cylinder.',
+  create: () => new CylindricalChess(),
+});
+
+registerVariant({
   name: 'Pocket Knight',
   files: 8,
   ranks: 8,
@@ -482,6 +499,20 @@ registerVariant({
   inventedBy: 'L. Tressan',
   description: 'A historic 10 x 10 variant from 19th-century Germany with a leaping General and Adjutant.',
   create: () => new EmperorsGame(),
+});
+
+registerVariant({
+  name: 'Archchess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant', 'Historic'],
+  invented: '1683',
+  inventedBy: 'Francesco Piacenza',
+  description:
+    'A 17th-century 10 x 10 variant with a Decurion (Ferz), Centurion (Squirrel), ' +
+    'and the historic "king\'s leap" — once per game each king may jump two squares orthogonally.',
+  colorScheme: 'Grayscale',
+  create: () => new Archchess(),
 });
 
 registerVariant({
