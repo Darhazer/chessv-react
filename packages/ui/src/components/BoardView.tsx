@@ -81,10 +81,8 @@ export function BoardView({
                     y={y + SQUARE_SIZE * 0.05}
                     width={SQUARE_SIZE * 0.9}
                     height={SQUARE_SIZE * 0.9}
-                    style={{
-                      pointerEvents: 'none',
-                      ...(piece.player === 1 ? { filter: 'invert(1)' } : {}),
-                    }}
+                    style={{ pointerEvents: 'none' }}
+                    filter={piece.player === 1 ? 'url(#chessv-invert)' : undefined}
                   />
                 );
               }
@@ -130,6 +128,23 @@ export function BoardView({
       role="grid"
       aria-label="Chess board"
     >
+      <defs>
+        {/*
+         * Inverts an image's RGB while preserving alpha — used to render the
+         * dark side's piece from the same chroma-keyed bitmap as the light
+         * side. CSS `filter: invert(1)` works in browsers but inconsistently
+         * on SVG <image>; the explicit feColorMatrix is reliable everywhere.
+         */}
+        <filter id="chessv-invert">
+          <feColorMatrix
+            type="matrix"
+            values="-1 0 0 0 1
+                     0 -1 0 0 1
+                     0 0 -1 0 1
+                     0 0 0 1 0"
+          />
+        </filter>
+      </defs>
       {cells}
     </svg>
   );
