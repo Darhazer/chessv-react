@@ -784,3 +784,140 @@ export class LightningWarmachine extends PieceType {
     }
   }
 }
+
+/** Knight + Camel — the "Wildebeest" of R. Wayne Schmittberger's Wildebeest Chess. */
+export class Wildebeest extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Wildebeest', name, notation, midgameValue, endgameValue, preferredImageName);
+    Wildebeest.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    Knight.addMoves(type);
+    Camel.addMoves(type);
+  }
+}
+
+/** King + Camel — the "Camel General" of various Miscellaneous variants. */
+export class CamelGeneral extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Camel General', name, notation, midgameValue, endgameValue, preferredImageName);
+    CamelGeneral.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    King.addMoves(type);
+    Camel.addMoves(type);
+  }
+}
+
+/** The Shogi Gold General: steps in all directions except the rear two diagonals. */
+export class GoldGeneral extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Gold General', name, notation, midgameValue, endgameValue, preferredImageName);
+    GoldGeneral.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    type.step(new Direction(1, 0));
+    type.step(new Direction(1, 1));
+    type.step(new Direction(1, -1));
+    type.step(new Direction(0, 1));
+    type.step(new Direction(0, -1));
+    type.step(new Direction(-1, 0));
+  }
+}
+
+/**
+ * Rook on files + Wazir-step on ranks — the Shogi "Vertical Mover General" with
+ * extra diagonal-Ferz steps.
+ */
+export class VerticalMoverGeneral extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super(
+      'Vertical Mover General',
+      name,
+      notation,
+      midgameValue,
+      endgameValue,
+      preferredImageName,
+    );
+    VerticalMoverGeneral.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    type.slide(new Direction(1, 0));
+    type.slide(new Direction(-1, 0));
+    type.step(new Direction(0, 1));
+    type.step(new Direction(0, -1));
+    Ferz.addMoves(type);
+  }
+}
+
+/**
+ * Rook on ranks + Wazir-step on files — the Shogi "Side Mover General" with
+ * extra diagonal-Ferz steps.
+ */
+export class SideMoverGeneral extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Side Mover General', name, notation, midgameValue, endgameValue, preferredImageName);
+    SideMoverGeneral.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    type.slide(new Direction(0, 1));
+    type.slide(new Direction(0, -1));
+    type.step(new Direction(1, 0));
+    type.step(new Direction(-1, 0));
+    Ferz.addMoves(type);
+  }
+}
+
+/** Squirrel + King — the "Squirrel General" of various Miscellaneous variants. */
+export class SquirrelGeneral extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Squirrel General', name, notation, midgameValue, endgameValue, preferredImageName);
+    SquirrelGeneral.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    Squirrel.addMoves(type);
+    King.addMoves(type);
+  }
+}

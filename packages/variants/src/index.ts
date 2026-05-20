@@ -41,6 +41,13 @@ import { NewChancellorChess } from './v10x8/newChancellorChess.js';
 import { ChancellorChess } from './v9x9/chancellorChess.js';
 import { MinistersChess } from './v9x9/ministersChess.js';
 import { Warochess } from './v9x9/warochess.js';
+import { MainzerSchach } from './v11x8/mainzerSchach.js';
+import { WildebeestChess } from './v11x10/wildebeestChess.js';
+import { CagliostrosChess } from './v12x8/cagliostrosChess.js';
+import { CourierChess } from './v12x8/courierChess.js';
+import { JanusKamilChess } from './v12x10/janusKamilChess.js';
+import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
+import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 import { GreatChess } from './v10x10/greatChess.js';
 import { RomanChess } from './v10x10/romanChess.js';
@@ -58,6 +65,12 @@ export { Generic__x9 } from './abstract/generic__x9.js';
 export { Generic9x9 } from './abstract/generic9x9.js';
 export { Generic__x10 } from './abstract/generic__x10.js';
 export { Generic10x10 } from './abstract/generic10x10.js';
+export { Generic__x12 } from './abstract/generic__x12.js';
+export { Generic11x8 } from './abstract/generic11x8.js';
+export { Generic11x10 } from './abstract/generic11x10.js';
+export { Generic12x8 } from './abstract/generic12x8.js';
+export { Generic12x10 } from './abstract/generic12x10.js';
+export { Generic12x12 } from './abstract/generic12x12.js';
 export { BerolinaChess } from './v8x8/berolinaChess.js';
 export { Chess } from './v8x8/chess.js';
 export { Chess256 } from './v8x8/chess256.js';
@@ -90,6 +103,13 @@ export { NewChancellorChess } from './v10x8/newChancellorChess.js';
 export { ChancellorChess } from './v9x9/chancellorChess.js';
 export { MinistersChess } from './v9x9/ministersChess.js';
 export { Warochess } from './v9x9/warochess.js';
+export { MainzerSchach } from './v11x8/mainzerSchach.js';
+export { WildebeestChess } from './v11x10/wildebeestChess.js';
+export { CagliostrosChess } from './v12x8/cagliostrosChess.js';
+export { CourierChess } from './v12x8/courierChess.js';
+export { JanusKamilChess } from './v12x10/janusKamilChess.js';
+export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
+export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 export { GreatChess } from './v10x10/greatChess.js';
 export { RomanChess } from './v10x10/romanChess.js';
@@ -576,4 +596,99 @@ registerVariant({
   description: 'A totally symmetric 9 x 9 variant adding a Queen, with no castling.',
   colorScheme: 'Luna Decorabat',
   create: () => new Warochess(),
+});
+
+// *** 11x8 VARIANTS *** //
+
+registerVariant({
+  name: 'Mainzer Schach',
+  files: 11,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2004',
+  inventedBy: 'Jörg Knappen',
+  description: 'An 11 x 8 variant adding the Janus, Marshall and Amazon.',
+  create: () => new MainzerSchach(),
+});
+
+// *** 11x10 VARIANTS *** //
+
+registerVariant({
+  name: 'Wildebeest Chess',
+  files: 11,
+  ranks: 10,
+  tags: ['Chess Variant', 'Popular'],
+  invented: '1987',
+  inventedBy: 'R. Wayne Schmittberger',
+  description:
+    'An 11 x 10 variant balancing leaping pieces with the Camel and the Wildebeest (Knight + Camel).',
+  colorScheme: 'Lemon Cappuccino',
+  create: () => new WildebeestChess(),
+});
+
+// *** 12x8 VARIANTS *** //
+
+registerVariant({
+  name: "Cagliostro's Chess",
+  files: 12,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '1970s',
+  inventedBy: 'Savio Cagliostro',
+  description: 'A 12 x 8 variant adding the Archbishop, Chancellor and Amazon.',
+  create: () => new CagliostrosChess(),
+});
+
+registerVariant({
+  name: 'Courier Chess',
+  files: 12,
+  ranks: 8,
+  tags: ['Chess Variant', 'Historic', 'Popular'],
+  invented: '1200s',
+  inventedBy: 'Unknown',
+  description:
+    'The medieval 12 x 8 game dating back to at least 1202 and played for six hundred years.',
+  colorScheme: 'Sahara',
+  create: () => new CourierChess(),
+});
+
+// *** 12x10 VARIANTS *** //
+
+registerVariant({
+  name: 'Janus Kamil Chess',
+  files: 12,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2004',
+  inventedBy: 'Jörg Knappen',
+  description: 'A 12 x 10 variant adding the Janus and Camel with triple-step pawns.',
+  create: () => new JanusKamilChess(),
+});
+
+// *** 12x12 VARIANTS *** //
+
+registerVariant({
+  name: 'Chess on a 12 by 12 Board',
+  files: 12,
+  ranks: 12,
+  tags: ['Chess Variant'],
+  invented: '2000',
+  inventedBy: 'Doug Vogel',
+  description: 'Standard chess pieces on a 12 x 12 board with a back rank on rank 3.',
+  colorScheme: 'Baby Blues',
+  create: () => new ChessOnA12x12Board(),
+});
+
+// *** 16x8 VARIANTS *** //
+
+registerVariant({
+  name: 'Double Chess (16 x 8)',
+  files: 16,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '1996',
+  inventedBy: 'David Short',
+  description: 'Chess played on a double-width board with two piece sets and three queens.',
+  colorScheme: 'Golden Goose Egg',
+  create: () => new DoubleChess16x8(),
 });
