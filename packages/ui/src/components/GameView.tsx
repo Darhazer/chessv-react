@@ -18,6 +18,7 @@ import {
 import { createVariant } from '@chessv/variants';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
+import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import { useAiEngine } from '../useAiEngine.js';
 
@@ -87,6 +88,9 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const [pgnError, setPgnError] = useState<string | null>(null);
   /** When non-null, we are reviewing the position after move `reviewCursor`. */
   const [reviewCursor, setReviewCursor] = useState<number | null>(null);
+  const [colorSchemeName, setColorSchemeName] = useState(DEFAULT_SCHEME.name);
+  const colorScheme =
+    COLOR_SCHEMES.find((scheme) => scheme.name === colorSchemeName) ?? DEFAULT_SCHEME;
 
   const engine = useAiEngine(variantName);
   const game = gameRef.current;
@@ -282,6 +286,7 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           legalTargets={legalTargets}
           lastMove={game.highlightSquares}
           onSquareClick={handleSquareClick}
+          colorScheme={colorScheme}
         />
         {pendingPromotion !== null && (
           <div className="promotion-overlay">
@@ -339,6 +344,19 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
               {AI_DEPTHS.map((level) => (
                 <option key={level.depth} value={level.depth}>
                   {level.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Theme
+            <select
+              value={colorSchemeName}
+              onChange={(event) => setColorSchemeName(event.target.value)}
+            >
+              {COLOR_SCHEMES.map((scheme) => (
+                <option key={scheme.name} value={scheme.name}>
+                  {scheme.name}
                 </option>
               ))}
             </select>

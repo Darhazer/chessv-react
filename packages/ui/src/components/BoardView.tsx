@@ -6,14 +6,10 @@
  * Phase 1 it renders a rectangular board with click-to-move interaction.
  */
 import type { Game } from '@chessv/engine';
+import { type ColorScheme, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 
 const SQUARE_SIZE = 64;
-const LIGHT = '#e9d8b8';
-const DARK = '#9c6b3c';
-const SELECTED = '#f6e27a';
-const TARGET = 'rgba(40, 120, 40, 0.55)';
-const LAST_MOVE = 'rgba(240, 220, 90, 0.45)';
 
 interface BoardViewProps {
   game: Game;
@@ -25,6 +21,8 @@ interface BoardViewProps {
   lastMove: readonly number[] | null;
   /** Called when the user clicks a board square. */
   onSquareClick: (square: number) => void;
+  /** Colour scheme; defaults to Classic Wood. */
+  colorScheme?: ColorScheme;
 }
 
 /** Renders the board, pieces and move highlights as scalable SVG. */
@@ -34,7 +32,10 @@ export function BoardView({
   legalTargets,
   lastMove,
   onSquareClick,
+  colorScheme = DEFAULT_SCHEME,
 }: BoardViewProps): React.JSX.Element {
+  const { light: LIGHT, dark: DARK, selected: SELECTED, target: TARGET, lastMove: LAST_MOVE } =
+    colorScheme;
   const board = game.board;
   const { numFiles, numRanks } = board;
   const width = numFiles * SQUARE_SIZE;
