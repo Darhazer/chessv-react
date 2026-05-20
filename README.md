@@ -15,7 +15,7 @@ Early development. See `~/.claude/plans/` for the full porting plan and roadmap.
 | 2 | AI engine (Web Worker) | done |
 | 3 | All 160 variants | done (51 ported; see [phase-3-deferred](docs/phase-3-deferred.md)) |
 | 4 | Themes, PGN, polish | done (see [phase-4-deferred](docs/phase-4-deferred.md)) |
-| 5 | Hardening / parity testing | pending |
+| 5 | Hardening / parity testing | done |
 
 ## Workspace layout
 
