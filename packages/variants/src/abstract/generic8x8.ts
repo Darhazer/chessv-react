@@ -108,19 +108,17 @@ export abstract class Generic8x8 extends Generic__x8 {
         this.castlingMove(1, 'd8', 'b8', 'a8', 'c8', 'a');
       }
     } else if (this.castling.value === 'Flexible') {
-      // Flexible castling reuses the castling-move registration; the
-      // FlexibleCastlingRule is ported in a later phase.
-      this.addCastlingRule();
+      this.addFlexibleCastlingRule();
       if (kingSquare === 'e1') {
-        this.castlingMove(0, 'e1', 'g1', 'h1', 'f1', shredder ? 'H' : 'K');
-        this.castlingMove(0, 'e1', 'c1', 'a1', 'd1', shredder ? 'A' : 'Q');
-        this.castlingMove(1, 'e8', 'g8', 'h8', 'f8', shredder ? 'h' : 'k');
-        this.castlingMove(1, 'e8', 'c8', 'a8', 'd8', shredder ? 'a' : 'q');
+        this.flexibleCastlingMove(0, 'e1', 'g1', 'h1', shredder ? 'H' : 'K');
+        this.flexibleCastlingMove(0, 'e1', 'c1', 'a1', shredder ? 'A' : 'Q');
+        this.flexibleCastlingMove(1, 'e8', 'g8', 'h8', shredder ? 'h' : 'k');
+        this.flexibleCastlingMove(1, 'e8', 'c8', 'a8', shredder ? 'a' : 'q');
       } else {
-        this.castlingMove(0, 'd1', 'f1', 'h1', 'e1', 'H');
-        this.castlingMove(0, 'd1', 'b1', 'a1', 'c1', 'A');
-        this.castlingMove(1, 'd8', 'f8', 'h8', 'e8', 'h');
-        this.castlingMove(1, 'd8', 'b8', 'a8', 'c8', 'a');
+        this.flexibleCastlingMove(0, 'd1', 'f1', 'h1', 'H');
+        this.flexibleCastlingMove(0, 'd1', 'b1', 'a1', 'A');
+        this.flexibleCastlingMove(1, 'd8', 'f8', 'h8', 'h');
+        this.flexibleCastlingMove(1, 'd8', 'b8', 'a8', 'a');
       }
     }
   }

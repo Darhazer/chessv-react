@@ -1,6 +1,6 @@
 # Phase 3 — deferred variants
 
-The first Phase-3 batch ported 51 variants; a follow-up session ported **FlexibleCastlingRule** and **PromoteByReplacementRule**, unlocking 11 more — see clusters 1 and 2 below. The remaining ~98 are still blocked on the engine extensions described here.
+The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, and the **multi-move completion rules**, unlocking 15 more (clusters 1–4 below). The remaining ~94 are still blocked on the engine extensions described here.
 
 This document is a checklist for the engine work that would unlock each cluster.
 
@@ -65,25 +65,28 @@ is a soft prerequisite for some of them.
 
 ---
 
-## 3. Arbitrary-file castling (Fischer Random)
+## 3. Arbitrary-file castling (Fischer Random) ✅ DONE
 
-**Engine work:** generalise `CastlingRule` so the king and rook can start on
-any file (not just d/e). The C# uses Shredder-FEN privileges with file letters.
+**Status:** `packages/variants/src/v8x8/fischerRandomChess.ts` exports
+`FischerRandomChess` and `Chess480`, both subclasses of `Chess`. The existing
+`CastlingRule` already supports arbitrary king/rook files; the variants just
+provide a random Chess960 back-rank array and register castling moves with
+the actual king/rook file letters as Shredder-FEN privs.
 
-**Unlocks (1):** FischerRandomChess (8x8). Also a prerequisite for any future
-Chess960-style variants.
+**Unlocked (2 variants):** Fischer Random Chess, Chess480.
 
 ---
 
-## 4. Multi-move turns
+## 4. Multi-move turns ✅ DONE
 
-**Engine work:** port the alternative `MoveCompletionRule` subclasses in
-`ChessV.Games/Rules/MultiMove/`. The current engine's
-`MoveCompletionDefaultRule` flips `currentSide` after each move; the
-multi-move rules keep `currentSide` for N consecutive moves.
+**Status:** `packages/rules/src/multiMoveCompletionRules.ts` exports
+`DoubleMoveCompletionRule` and `MarseillaisMoveCompletionRule`, both
+subclasses of the engine's `MoveCompletionRule`. They share a four-state
+machine (`w2`/`w`/`b2`/`b`) — Marseillais adds the check-truncation
+exception (giving check ends the turn early).
 
-**Unlocks (~3):** Marseillais Chess (8x8), Doublemove Chess (8x8), and a few
-larger-board multi-move variants if present.
+**Unlocked (2 variants):** Marseillais Chess, Doublemove Chess (8×8).
+Larger-board multi-move variants would slot in trivially if any exist.
 
 ---
 
@@ -149,8 +152,8 @@ Tackling the clusters above roughly in this order is the best return on effort:
 1. ✅ **Flexible castling** — done. 5 variants unlocked.
 2. ✅ **Replacement promotion** — done (base rule). 6 variants unlocked.
    Complex / colorbound promotion still pending.
-3. **Fischer-style castling** — 1 variant but historically important.
-4. **Multi-move turns** — 2–3 variants.
+3. ✅ **Fischer-style castling** — done. 2 variants unlocked.
+4. ✅ **Multi-move turns** — done. 2 variants unlocked.
 5. **Drops / pockets** — 1 variant now but big future leverage.
 6. **Cylindrical geometry** — 1–2 variants.
 7. **Multi-board (Alice)** — 1 variant; substantial.

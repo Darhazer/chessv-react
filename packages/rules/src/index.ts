@@ -15,6 +15,10 @@ export { CheckmateRule } from './checkmateRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
 export { Move50Rule } from './move50Rule.js';
+export {
+  DoubleMoveCompletionRule,
+  MarseillaisMoveCompletionRule,
+} from './multiMoveCompletionRules.js';
 export { PawnSwapRule } from './pawnSwapRule.js';
 export {
   PromoteByReplacementRule,

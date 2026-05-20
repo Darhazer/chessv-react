@@ -11,6 +11,8 @@
 
 import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
+import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
+import { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 import { Chess256 } from './v8x8/chess256.js';
 import { ChessWithDifferentArmies } from './v8x8/chessWithDifferentArmies.js';
 import { CorridorChess } from './v8x8/corridorChess.js';
@@ -98,6 +100,8 @@ export { RelativeRoyaltyChess } from './v8x8/relativeRoyaltyChess.js';
 export { RevisedChess } from './v8x8/revisedChess.js';
 export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
+export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
+export { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 export { WildCastle } from './v8x8/wildCastle.js';
 export {
   BirdsChess,
@@ -339,6 +343,58 @@ registerVariant({
   inventedBy: 'Unknown',
   description: 'A Chess derivative with randomized setup but normal castling.',
   create: () => new WildCastle(),
+});
+
+registerVariant({
+  name: 'Fischer Random Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Popular', 'Random Array'],
+  invented: '1996',
+  inventedBy: 'Bobby Fischer',
+  description:
+    "Bobby Fischer's randomised opening: the back rank is shuffled to one of " +
+    '960 starting positions, eliminating opening memorisation.',
+  create: () => new FischerRandomChess(),
+});
+
+registerVariant({
+  name: 'Chess480',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Random Array'],
+  invented: '2005',
+  inventedBy: 'John Kipling Lewis',
+  description:
+    'A Fischer Random variant where the king always slides two squares (or one ' +
+    "from the b/g file) toward the nearest rook for castling.",
+  create: () => new Chess480(),
+});
+
+registerVariant({
+  name: 'Marseillais Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Popular', 'Historic', 'Multi-Move'],
+  invented: 'circa 1920',
+  inventedBy: 'Unknown',
+  description:
+    'After white opens with a single move, each side plays two moves per turn. ' +
+    'Giving check on the first move ends the turn — the second move is forfeited.',
+  create: () => new MarseillaisChess(),
+});
+
+registerVariant({
+  name: 'Doublemove Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Multi-Move'],
+  invented: '1957',
+  inventedBy: 'Fred Galvin',
+  description:
+    'Both sides play two moves per turn (white opens with one). The king is a ' +
+    'normal piece — there is no check; you win by capturing it.',
+  create: () => new DoublemoveChess(),
 });
 
 registerVariant({
