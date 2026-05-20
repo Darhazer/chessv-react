@@ -30,6 +30,16 @@ describe('Standard Chess perft', () => {
   it('depth 4 → 197281', () => {
     expect(perftNodes(4)).toBe(197281);
   });
+
+  // Depth 5 takes ~15-20 s; only run it under CI or when explicitly opted in.
+  const runDeep = process.env.CI === 'true' || process.env.CHESSV_DEEP_PERFT === '1';
+  it.runIf(runDeep)(
+    'depth 5 → 4865609',
+    () => {
+      expect(perftNodes(5)).toBe(4865609);
+    },
+    60_000,
+  );
 });
 
 describe('Standard Chess perft — detailed leaf counts at depth 3', () => {
