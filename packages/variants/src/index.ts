@@ -48,6 +48,7 @@ import { CourierChess } from './v12x8/courierChess.js';
 import { JanusKamilChess } from './v12x10/janusKamilChess.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
+import { VikingChess } from './vMiscellaneous/vikingChess.js';
 import { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 import { GreatChess } from './v10x10/greatChess.js';
 import { RomanChess } from './v10x10/romanChess.js';
@@ -110,6 +111,7 @@ export { CourierChess } from './v12x8/courierChess.js';
 export { JanusKamilChess } from './v12x10/janusKamilChess.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
+export { VikingChess } from './vMiscellaneous/vikingChess.js';
 export { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 export { GreatChess } from './v10x10/greatChess.js';
 export { RomanChess } from './v10x10/romanChess.js';
@@ -691,4 +693,18 @@ registerVariant({
   description: 'Chess played on a double-width board with two piece sets and three queens.',
   colorScheme: 'Golden Goose Egg',
   create: () => new DoubleChess16x8(),
+});
+
+// *** MISCELLANEOUS VARIANTS *** //
+
+registerVariant({
+  name: 'Viking Chess',
+  files: 12,
+  ranks: 7,
+  tags: ['Chess Variant'],
+  invented: '2002',
+  inventedBy: 'Tomas Forsman',
+  description:
+    'A 12 x 7 variant by Tomas Forsman with both colors interleaved across the back ranks.',
+  create: () => new VikingChess(),
 });
