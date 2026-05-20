@@ -1,13 +1,18 @@
 /**
  * Asset-conversion pipeline.
  *
- * Converts ChessV's monochrome BMP piece sets into web-ready PNGs and emits a
- * per-set manifest mapping piece-type internal names to image paths.
+ * Converts ChessV's BMP piece sets into web-ready PNGs and emits a per-set
+ * manifest mapping piece-type internal names to image paths.
  *
- * For each input BMP we strip the white background (mapping near-white pixels
- * to alpha=0) so the BoardView can composite the piece directly over the
- * square. Black pieces are rendered by inverting the same image in the
- * browser (CSS `filter: invert(1)`), so we only need one PNG per piece type.
+ * For each input BMP we strip the background (mapping pixels reachable from
+ * the edges in the chroma-key colour to alpha=0) so the BoardView can
+ * composite the piece directly over the square.
+ *
+ * Sets come in two flavours:
+ *  - `shared`: one BMP per piece (e.g. Standard, Abstract, Small). The
+ *    BoardView renders the dark side by inverting the same image.
+ *  - `per-side`: two BMPs per piece, prefixed `W` and `B` (e.g. Motif,
+ *    Eurasian, Runes). Each side gets its own image; no inversion.
  *
  * Run with `pnpm convert-assets`.
  */
@@ -23,26 +28,34 @@ const PIECE_SETS_DIR = join(SOURCE_ROOT, 'Graphics', 'Piece Sets');
 const OUT_ROOT = join(process.cwd(), 'packages', 'ui', 'public', 'assets', 'pieces');
 const MANIFEST_ROOT = join(process.cwd(), 'packages', 'ui', 'src', 'assets');
 
-/** Sets we have piece-name mappings for; expand as more are added. */
-const SUPPORTED_SETS = ['Standard'] as const;
+/** A piece's source file stem → engine `PieceType.internalName`. */
+type PieceMap = Record<string, string>;
 
-/** Map a BMP's bare name (without extension) to the engine's PieceType.internalName. */
-const FILE_TO_PIECE: Record<string, string> = {
-  // Standard chess pieces.
+interface SetConfig {
+  name: string;
+  /** Whether the set ships one image per piece or one per (piece, side). */
+  mode: 'shared' | 'per-side';
+  /**
+   * For `shared`: file stem (e.g. `King`) → internal name.
+   * For `per-side`: bare stem with the W/B prefix stripped → internal name.
+   */
+  pieceMap: PieceMap;
+}
+
+/** Standard's mapping covers the broadest range of fairy pieces ChessV ships. */
+const STANDARD_MAP: PieceMap = {
   King: 'King',
   Queen: 'Queen',
   Rook: 'Rook',
   Bishop: 'Bishop',
   Knight: 'Knight',
   Pawn: 'Pawn',
-  // Movement atoms.
   Wazir: 'Wazir',
   Ferz: 'Ferz',
   Elephant: 'Elephant',
   Dabbabah: 'Dabbabah',
   Camel: 'Camel',
   Zebra: 'Zebra',
-  // Fairy compounds carried by many variants.
   Archbishop: 'Archbishop',
   Chancellor: 'Chancellor',
   Amazon: 'Amazon',
@@ -53,20 +66,105 @@ const FILE_TO_PIECE: Record<string, string> = {
   DragonHorse: 'Dragon Horse',
   Lion: 'Lion',
   Unicorn: 'Unicorn',
-  // Shogi-derived.
   SilverGeneral: 'Silver General',
   GoldGeneral: 'Gold General',
-  // Xiangqi.
   Cannon: 'Cannon',
 };
+
+const SETS: SetConfig[] = [
+  { name: 'Standard', mode: 'shared', pieceMap: STANDARD_MAP },
+  {
+    name: 'Abstract',
+    mode: 'shared',
+    pieceMap: {
+      Amazon: 'Amazon',
+      Archbishop: 'Archbishop',
+      Bishop: 'Bishop',
+      Cannon: 'Cannon',
+      Champion: 'Champion',
+      Chancellor: 'Chancellor',
+      Elephant: 'Elephant',
+      Ferz: 'Ferz',
+      King: 'King',
+      Knight: 'Knight',
+      Lion: 'Lion',
+      Pawn: 'Pawn',
+      Queen: 'Queen',
+      Rook: 'Rook',
+      Unicorn: 'Unicorn',
+      Vao: 'Vao',
+      Wizard: 'Wizard',
+    },
+  },
+  {
+    name: 'Small',
+    mode: 'shared',
+    pieceMap: {
+      Archbishop: 'Archbishop',
+      Bishop: 'Bishop',
+      Camel: 'Camel',
+      Chancellor: 'Chancellor',
+      King: 'King',
+      Knight: 'Knight',
+      Lion: 'Lion',
+      Pawn: 'Pawn',
+      Queen: 'Queen',
+      Rook: 'Rook',
+      Wizard: 'Wizard',
+    },
+  },
+  {
+    name: 'Motif',
+    mode: 'per-side',
+    pieceMap: {
+      Amazon: 'Amazon',
+      Archbishop: 'Archbishop',
+      Bishop: 'Bishop',
+      Cannon: 'Cannon',
+      Chancellor: 'Chancellor',
+      King: 'King',
+      Knight: 'Knight',
+      Nightrider: 'Nightrider',
+      Pawn: 'Pawn',
+      Queen: 'Queen',
+      Rook: 'Rook',
+    },
+  },
+  {
+    name: 'Eurasian',
+    mode: 'per-side',
+    pieceMap: {
+      Bishop: 'Bishop',
+      Cannon: 'Cannon',
+      King: 'King',
+      Knight: 'Knight',
+      Pawn: 'Pawn',
+      Queen: 'Queen',
+      Rook: 'Rook',
+      Vao: 'Vao',
+    },
+  },
+  {
+    name: 'Runes',
+    mode: 'per-side',
+    pieceMap: {
+      Bishop: 'Bishop',
+      King: 'King',
+      Knight: 'Knight',
+      Pawn: 'Pawn',
+      Queen: 'Queen',
+      Rook: 'Rook',
+    },
+  },
+];
 
 /**
  * Decode one BMP and re-encode as a PNG with the outside background made
  * transparent. sharp cannot read 4-bit Windows BMPs, so macOS's `sips`
- * converts BMP → PNG first; we then flood-fill the white pixels reachable
- * from the image edges to alpha 0, leaving the piece's interior white intact.
+ * converts BMP → PNG first; we then flood-fill the chroma-key pixels
+ * reachable from the image edges to alpha 0, leaving the piece intact.
  */
-async function convertBmp(input: string, output: string): Promise<void> {
+async function convertBmp(input: string, output: string): Promise<number> {
   const opaque = join(tmpdir(), `chessv-${basename(input, '.bmp')}-${process.pid}.png`);
   try {
     execFileSync('sips', ['-s', 'format', 'png', input, '--out', opaque], { stdio: 'ignore' });
@@ -122,49 +220,67 @@ async function convertBmp(input: string, output: string): Promise<void> {
     await sharp(data, { raw: { width: w, height: h, channels: 4 } })
       .png()
       .toFile(output);
+    return w;
   } finally {
     rmSync(opaque, { force: true });
   }
 }
 
-interface Manifest {
-  set: string;
-  /** Image size in source pixels; the UI scales as needed. */
-  imageSize: number;
-  /** Engine `PieceType.internalName` → relative URL of the piece image. */
-  pieces: Record<string, string>;
+interface PieceImageEntry {
+  light: string;
+  dark?: string;
 }
 
-async function convertSet(setName: string): Promise<Manifest | null> {
-  const inputDir = join(PIECE_SETS_DIR, setName);
+interface Manifest {
+  set: string;
+  imageSize: number;
+  mode: 'shared' | 'per-side';
+  pieces: Record<string, PieceImageEntry>;
+}
+
+async function convertSet(config: SetConfig): Promise<Manifest | null> {
+  const inputDir = join(PIECE_SETS_DIR, config.name);
   if (!existsSync(inputDir)) {
-    console.warn(`Skipping ${setName}: source not found at ${inputDir}`);
+    console.warn(`Skipping ${config.name}: source not found at ${inputDir}`);
     return null;
   }
-  const outputDir = join(OUT_ROOT, setName);
+  const outputDir = join(OUT_ROOT, config.name);
   mkdirSync(outputDir, { recursive: true });
 
-  const files = readdirSync(inputDir).filter((name) => name.toLowerCase().endsWith('.bmp'));
-  const pieces: Record<string, string> = {};
+  const available = new Set(
+    readdirSync(inputDir)
+      .filter((name) => name.toLowerCase().endsWith('.bmp'))
+      .map((name) => basename(name, '.bmp')),
+  );
+
+  const pieces: Record<string, PieceImageEntry> = {};
   let imageSize = 0;
 
-  for (const file of files) {
-    const stem = basename(file, '.bmp');
-    const pieceName = FILE_TO_PIECE[stem];
-    if (pieceName === undefined) continue; // not yet wired up
-
-    const outPath = join(outputDir, `${stem}.png`);
-    await convertBmp(join(inputDir, file), outPath);
-    pieces[pieceName] = `/assets/pieces/${setName}/${stem}.png`;
-
-    if (imageSize === 0) {
-      const meta = await sharp(outPath).metadata();
-      imageSize = meta.width ?? 0;
+  for (const [stem, pieceName] of Object.entries(config.pieceMap)) {
+    if (config.mode === 'shared') {
+      if (!available.has(stem)) continue;
+      const outPath = join(outputDir, `${stem}.png`);
+      const w = await convertBmp(join(inputDir, `${stem}.bmp`), outPath);
+      if (imageSize === 0) imageSize = w;
+      pieces[pieceName] = { light: `/assets/pieces/${config.name}/${stem}.png` };
+    } else {
+      const wStem = `W${stem}`;
+      const bStem = `B${stem}`;
+      if (!available.has(wStem) || !available.has(bStem)) continue;
+      const wOut = join(outputDir, `${wStem}.png`);
+      const bOut = join(outputDir, `${bStem}.png`);
+      const wSize = await convertBmp(join(inputDir, `${wStem}.bmp`), wOut);
+      await convertBmp(join(inputDir, `${bStem}.bmp`), bOut);
+      if (imageSize === 0) imageSize = wSize;
+      pieces[pieceName] = {
+        light: `/assets/pieces/${config.name}/${wStem}.png`,
+        dark: `/assets/pieces/${config.name}/${bStem}.png`,
+      };
     }
   }
 
-  console.log(`${setName}: converted ${Object.keys(pieces).length} pieces`);
-  return { set: setName, imageSize, pieces };
+  console.log(`${config.name}: converted ${Object.keys(pieces).length} pieces (${config.mode})`);
+  return { set: config.name, imageSize, mode: config.mode, pieces };
 }
 
 async function main(): Promise<void> {
@@ -174,10 +290,10 @@ async function main(): Promise<void> {
   }
   mkdirSync(MANIFEST_ROOT, { recursive: true });
 
-  for (const setName of SUPPORTED_SETS) {
-    const manifest = await convertSet(setName);
+  for (const set of SETS) {
+    const manifest = await convertSet(set);
     if (manifest === null) continue;
-    const manifestPath = join(MANIFEST_ROOT, `pieceSet-${setName}.json`);
+    const manifestPath = join(MANIFEST_ROOT, `pieceSet-${set.name}.json`);
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
     console.log(`Wrote manifest: ${manifestPath}`);
   }

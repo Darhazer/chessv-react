@@ -1,0 +1,40 @@
+{
+  "set": "Small",
+  "imageSize": 40,
+  "mode": "shared",
+  "pieces": {
+    "Archbishop": {
+      "light": "/assets/pieces/Small/Archbishop.png"
+    },
+    "Bishop": {
+      "light": "/assets/pieces/Small/Bishop.png"
+    },
+    "Camel": {
+      "light": "/assets/pieces/Small/Camel.png"
+    },
+    "Chancellor": {
+      "light": "/assets/pieces/Small/Chancellor.png"
+    },
+    "King": {
+      "light": "/assets/pieces/Small/King.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Small/Knight.png"
+    },
+    "Lion": {
+      "light": "/assets/pieces/Small/Lion.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Small/Pawn.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Small/Queen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Small/Rook.png"
+    },
+    "Wizard": {
+      "light": "/assets/pieces/Small/Wizard.png"
+    }
+  }
+}

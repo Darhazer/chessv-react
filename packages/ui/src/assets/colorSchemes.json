@@ -1,0 +1,20 @@
+{
+  "_comment": "Ported from ChessV.GUI/ColorSchemeLibrary.cs. Each entry keeps ChessV's SquareColor1 (light) and SquareColor2 (dark); `accent` is the source HighlightColor used to derive selection / move overlays. Texture-based schemes (Luna Decorabat, Marmoor Quadraut, Lemon Cappuccino, Rosaliya, Brushed Steel, Norwegian Wood) are omitted until the texture pipeline lands — see docs/phase-4-deferred.md §3.",
+  "schemes": [
+    { "name": "Cape Cod",            "light": "#FFFFD6", "dark": "#5D7E7E", "accent": "#400000" },
+    { "name": "Surrealistic Summer", "light": "#CCCC11", "dark": "#339933", "accent": "#111199" },
+    { "name": "Lesotho",             "light": "#FEFEDD", "dark": "#22BB22", "accent": "#111199" },
+    { "name": "Cinnamon",            "light": "#FFEFCD", "dark": "#AD7665", "accent": "#EA0000" },
+    { "name": "Sublimation",         "light": "#FFFFFF", "dark": "#6C7B71", "accent": "#000000" },
+    { "name": "Sahara",              "light": "#FFFFCC", "dark": "#C08040", "accent": "#623100" },
+    { "name": "Orchid",              "light": "#DED6E4", "dark": "#5555AA", "accent": "#000071" },
+    { "name": "Buckingham Green",    "light": "#FFFFD6", "dark": "#9CB5A5", "accent": "#006352" },
+    { "name": "Grayscale",           "light": "#FFFFFF", "dark": "#C0C0C0", "accent": "#575757" },
+    { "name": "Callisto",            "light": "#FFFFD5", "dark": "#79B7A4", "accent": "#666699" },
+    { "name": "Valhalla",            "light": "#FFFFFF", "dark": "#008000", "accent": "#A0A0A0" },
+    { "name": "Brown Bear Brawl",    "light": "#FFDEAD", "dark": "#CD853F", "accent": "#8B4513" },
+    { "name": "Cavalier Komi",       "light": "#FFFFE1", "dark": "#008000", "accent": "#000000" },
+    { "name": "Baby Blues",          "light": "#FFFFFF", "dark": "#A4C8F0", "accent": "#82B4EA" },
+    { "name": "Golden Goose Egg",    "light": "#FFEEBB", "dark": "#886600", "accent": "#995500" }
+  ]
+}

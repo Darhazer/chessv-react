@@ -1,0 +1,39 @@
+{
+  "set": "Eurasian",
+  "imageSize": 47,
+  "mode": "per-side",
+  "pieces": {
+    "Bishop": {
+      "light": "/assets/pieces/Eurasian/WBishop.png",
+      "dark": "/assets/pieces/Eurasian/BBishop.png"
+    },
+    "Cannon": {
+      "light": "/assets/pieces/Eurasian/WCannon.png",
+      "dark": "/assets/pieces/Eurasian/BCannon.png"
+    },
+    "King": {
+      "light": "/assets/pieces/Eurasian/WKing.png",
+      "dark": "/assets/pieces/Eurasian/BKing.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Eurasian/WKnight.png",
+      "dark": "/assets/pieces/Eurasian/BKnight.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Eurasian/WPawn.png",
+      "dark": "/assets/pieces/Eurasian/BPawn.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Eurasian/WQueen.png",
+      "dark": "/assets/pieces/Eurasian/BQueen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Eurasian/WRook.png",
+      "dark": "/assets/pieces/Eurasian/BRook.png"
+    },
+    "Vao": {
+      "light": "/assets/pieces/Eurasian/WVao.png",
+      "dark": "/assets/pieces/Eurasian/BVao.png"
+    }
+  }
+}

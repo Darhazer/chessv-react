@@ -1,30 +1,79 @@
 {
   "set": "Standard",
   "imageSize": 50,
+  "mode": "shared",
   "pieces": {
-    "Amazon": "/assets/pieces/Standard/Amazon.png",
-    "Archbishop": "/assets/pieces/Standard/Archbishop.png",
-    "Bishop": "/assets/pieces/Standard/Bishop.png",
-    "Camel": "/assets/pieces/Standard/Camel.png",
-    "Cannon": "/assets/pieces/Standard/Cannon.png",
-    "Champion": "/assets/pieces/Standard/Champion.png",
-    "Chancellor": "/assets/pieces/Standard/Chancellor.png",
-    "Dabbabah": "/assets/pieces/Standard/Dabbabah.png",
-    "Dragon Horse": "/assets/pieces/Standard/DragonHorse.png",
-    "Dragon King": "/assets/pieces/Standard/DragonKing.png",
-    "Elephant": "/assets/pieces/Standard/Elephant.png",
-    "Ferz": "/assets/pieces/Standard/Ferz.png",
-    "Gold General": "/assets/pieces/Standard/GoldGeneral.png",
-    "King": "/assets/pieces/Standard/King.png",
-    "Knight": "/assets/pieces/Standard/Knight.png",
-    "Lion": "/assets/pieces/Standard/Lion.png",
-    "Pawn": "/assets/pieces/Standard/Pawn.png",
-    "Queen": "/assets/pieces/Standard/Queen.png",
-    "Rook": "/assets/pieces/Standard/Rook.png",
-    "Silver General": "/assets/pieces/Standard/SilverGeneral.png",
-    "Unicorn": "/assets/pieces/Standard/Unicorn.png",
-    "Wazir": "/assets/pieces/Standard/Wazir.png",
-    "Wildebeest": "/assets/pieces/Standard/Wildebeest.png",
-    "Zebra": "/assets/pieces/Standard/Zebra.png"
+    "King": {
+      "light": "/assets/pieces/Standard/King.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Standard/Queen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Standard/Rook.png"
+    },
+    "Bishop": {
+      "light": "/assets/pieces/Standard/Bishop.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Standard/Knight.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Standard/Pawn.png"
+    },
+    "Wazir": {
+      "light": "/assets/pieces/Standard/Wazir.png"
+    },
+    "Ferz": {
+      "light": "/assets/pieces/Standard/Ferz.png"
+    },
+    "Elephant": {
+      "light": "/assets/pieces/Standard/Elephant.png"
+    },
+    "Dabbabah": {
+      "light": "/assets/pieces/Standard/Dabbabah.png"
+    },
+    "Camel": {
+      "light": "/assets/pieces/Standard/Camel.png"
+    },
+    "Zebra": {
+      "light": "/assets/pieces/Standard/Zebra.png"
+    },
+    "Archbishop": {
+      "light": "/assets/pieces/Standard/Archbishop.png"
+    },
+    "Chancellor": {
+      "light": "/assets/pieces/Standard/Chancellor.png"
+    },
+    "Amazon": {
+      "light": "/assets/pieces/Standard/Amazon.png"
+    },
+    "Wildebeest": {
+      "light": "/assets/pieces/Standard/Wildebeest.png"
+    },
+    "Champion": {
+      "light": "/assets/pieces/Standard/Champion.png"
+    },
+    "Dragon King": {
+      "light": "/assets/pieces/Standard/DragonKing.png"
+    },
+    "Dragon Horse": {
+      "light": "/assets/pieces/Standard/DragonHorse.png"
+    },
+    "Lion": {
+      "light": "/assets/pieces/Standard/Lion.png"
+    },
+    "Unicorn": {
+      "light": "/assets/pieces/Standard/Unicorn.png"
+    },
+    "Silver General": {
+      "light": "/assets/pieces/Standard/SilverGeneral.png"
+    },
+    "Gold General": {
+      "light": "/assets/pieces/Standard/GoldGeneral.png"
+    },
+    "Cannon": {
+      "light": "/assets/pieces/Standard/Cannon.png"
+    }
   }
 }

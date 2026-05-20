@@ -1,0 +1,31 @@
+{
+  "set": "Runes",
+  "imageSize": 50,
+  "mode": "per-side",
+  "pieces": {
+    "Bishop": {
+      "light": "/assets/pieces/Runes/WBishop.png",
+      "dark": "/assets/pieces/Runes/BBishop.png"
+    },
+    "King": {
+      "light": "/assets/pieces/Runes/WKing.png",
+      "dark": "/assets/pieces/Runes/BKing.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Runes/WKnight.png",
+      "dark": "/assets/pieces/Runes/BKnight.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Runes/WPawn.png",
+      "dark": "/assets/pieces/Runes/BPawn.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Runes/WQueen.png",
+      "dark": "/assets/pieces/Runes/BQueen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Runes/WRook.png",
+      "dark": "/assets/pieces/Runes/BRook.png"
+    }
+  }
+}

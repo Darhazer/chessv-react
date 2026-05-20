@@ -22,6 +22,7 @@ import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import { DEFAULT_PIECE_SET, PIECE_SETS } from '../pieceSets.js';
 import { useAiEngine } from '../useAiEngine.js';
+import { useLocalStorage } from '../useLocalStorage.js';
 
 /** Build a fresh, initialized game for the named variant. */
 function createGame(variantName: string): Game {
@@ -81,18 +82,21 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null);
-  const [aiSide, setAiSide] = useState<AiSide>('off');
-  const [aiDepth, setAiDepth] = useState(4);
+  const [aiSide, setAiSide] = useLocalStorage<AiSide>('aiSide', 'off');
+  const [aiDepth, setAiDepth] = useLocalStorage('aiDepth', 4);
   const [thinking, setThinking] = useState(false);
   const [pgnMode, setPgnMode] = useState<'export' | 'import' | null>(null);
   const [pgnText, setPgnText] = useState('');
   const [pgnError, setPgnError] = useState<string | null>(null);
   /** When non-null, we are reviewing the position after move `reviewCursor`. */
   const [reviewCursor, setReviewCursor] = useState<number | null>(null);
-  const [colorSchemeName, setColorSchemeName] = useState(DEFAULT_SCHEME.name);
+  const [colorSchemeName, setColorSchemeName] = useLocalStorage(
+    'colorScheme',
+    DEFAULT_SCHEME.name,
+  );
   const colorScheme =
     COLOR_SCHEMES.find((scheme) => scheme.name === colorSchemeName) ?? DEFAULT_SCHEME;
-  const [pieceSetName, setPieceSetName] = useState(DEFAULT_PIECE_SET);
+  const [pieceSetName, setPieceSetName] = useLocalStorage('pieceSet', DEFAULT_PIECE_SET);
   const pieceSet = PIECE_SETS[pieceSetName] ?? null;
 
   const engine = useAiEngine(variantName);

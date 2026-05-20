@@ -1,0 +1,58 @@
+{
+  "set": "Abstract",
+  "imageSize": 50,
+  "mode": "shared",
+  "pieces": {
+    "Amazon": {
+      "light": "/assets/pieces/Abstract/Amazon.png"
+    },
+    "Archbishop": {
+      "light": "/assets/pieces/Abstract/Archbishop.png"
+    },
+    "Bishop": {
+      "light": "/assets/pieces/Abstract/Bishop.png"
+    },
+    "Cannon": {
+      "light": "/assets/pieces/Abstract/Cannon.png"
+    },
+    "Champion": {
+      "light": "/assets/pieces/Abstract/Champion.png"
+    },
+    "Chancellor": {
+      "light": "/assets/pieces/Abstract/Chancellor.png"
+    },
+    "Elephant": {
+      "light": "/assets/pieces/Abstract/Elephant.png"
+    },
+    "Ferz": {
+      "light": "/assets/pieces/Abstract/Ferz.png"
+    },
+    "King": {
+      "light": "/assets/pieces/Abstract/King.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Abstract/Knight.png"
+    },
+    "Lion": {
+      "light": "/assets/pieces/Abstract/Lion.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Abstract/Pawn.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Abstract/Queen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Abstract/Rook.png"
+    },
+    "Unicorn": {
+      "light": "/assets/pieces/Abstract/Unicorn.png"
+    },
+    "Vao": {
+      "light": "/assets/pieces/Abstract/Vao.png"
+    },
+    "Wizard": {
+      "light": "/assets/pieces/Abstract/Wizard.png"
+    }
+  }
+}

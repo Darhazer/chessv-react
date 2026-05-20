@@ -1,0 +1,51 @@
+{
+  "set": "Motif",
+  "imageSize": 46,
+  "mode": "per-side",
+  "pieces": {
+    "Amazon": {
+      "light": "/assets/pieces/Motif/WAmazon.png",
+      "dark": "/assets/pieces/Motif/BAmazon.png"
+    },
+    "Archbishop": {
+      "light": "/assets/pieces/Motif/WArchbishop.png",
+      "dark": "/assets/pieces/Motif/BArchbishop.png"
+    },
+    "Bishop": {
+      "light": "/assets/pieces/Motif/WBishop.png",
+      "dark": "/assets/pieces/Motif/BBishop.png"
+    },
+    "Cannon": {
+      "light": "/assets/pieces/Motif/WCannon.png",
+      "dark": "/assets/pieces/Motif/BCannon.png"
+    },
+    "Chancellor": {
+      "light": "/assets/pieces/Motif/WChancellor.png",
+      "dark": "/assets/pieces/Motif/BChancellor.png"
+    },
+    "King": {
+      "light": "/assets/pieces/Motif/WKing.png",
+      "dark": "/assets/pieces/Motif/BKing.png"
+    },
+    "Knight": {
+      "light": "/assets/pieces/Motif/WKnight.png",
+      "dark": "/assets/pieces/Motif/BKnight.png"
+    },
+    "Nightrider": {
+      "light": "/assets/pieces/Motif/WNightrider.png",
+      "dark": "/assets/pieces/Motif/BNightrider.png"
+    },
+    "Pawn": {
+      "light": "/assets/pieces/Motif/WPawn.png",
+      "dark": "/assets/pieces/Motif/BPawn.png"
+    },
+    "Queen": {
+      "light": "/assets/pieces/Motif/WQueen.png",
+      "dark": "/assets/pieces/Motif/BQueen.png"
+    },
+    "Rook": {
+      "light": "/assets/pieces/Motif/WRook.png",
+      "dark": "/assets/pieces/Motif/BRook.png"
+    }
+  }
+}

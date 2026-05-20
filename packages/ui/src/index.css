@@ -90,6 +90,19 @@ body {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
+/*
+ * The dashed focus ring is part of every focused cell but hidden by default;
+ * it appears only on keyboard focus (`:focus-visible`) so mouse clicks don't
+ * leave a stale ring on the last-clicked square.
+ */
+.board-wrap svg g:focus-visible .board-focus-ring {
+  opacity: 1;
+}
+
+.board-wrap svg g:focus {
+  outline: none;
+}
+
 .promotion-overlay {
   position: absolute;
   inset: 0;
