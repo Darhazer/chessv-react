@@ -74,9 +74,20 @@ async function convertBmp(input: string, output: string): Promise<void> {
     const { data, info } = raw;
     const w = info.width;
     const h = info.height;
+    // ChessV's BMPs use a chroma-key colour for the transparent background —
+    // most often a bright green or magenta, occasionally white. Sample the
+    // top-left pixel and treat anything close to it as background.
+    const bgR = data[0]!;
+    const bgG = data[1]!;
+    const bgB = data[2]!;
+    const TOLERANCE = 24;
     const isBackground = (idx: number): boolean => {
       const i = idx * 4;
-      return data[i]! >= 240 && data[i + 1]! >= 240 && data[i + 2]! >= 240;
+      return (
+        Math.abs(data[i]! - bgR) <= TOLERANCE &&
+        Math.abs(data[i + 1]! - bgG) <= TOLERANCE &&
+        Math.abs(data[i + 2]! - bgB) <= TOLERANCE
+      );
     };
     const visited = new Uint8Array(w * h);
     const stack: number[] = [];

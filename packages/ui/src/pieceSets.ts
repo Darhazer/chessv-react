@@ -24,4 +24,4 @@ export const PIECE_SETS: Record<string, PieceSetManifest | null> = {
   Standard: standardSet as PieceSetManifest,
 };
 
-export const DEFAULT_PIECE_SET = 'Unicode';
+export const DEFAULT_PIECE_SET = 'Standard';
