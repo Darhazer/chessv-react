@@ -126,7 +126,7 @@ for this batch.
 
 ---
 
-## 7. Multi-board geometry ✅ DONE (minimal Alice)
+## 7. Multi-board geometry ✅ DONE
 
 **Status:** ported.
 - `packages/engine/src/twoBoards.ts` — `TwoBoards` subclass holds two
@@ -138,12 +138,15 @@ for this batch.
   `StandardCapture` and redirects the destination to the mirror square
   on the other sub-board, gated on emptiness. King moves additionally
   check that the originating board's mirror isn't attacked.
+- `packages/rules/src/aliceCastlingRules.ts` — `AliceCastlingRule`,
+  `AliceFlexibleCastlingRule` and `AliceEnPassantRule` wrap the base
+  rules with the cross-board emptiness check, so the king/rook land on
+  the mirror sub-board and en-passant captures teleport too. The
+  variant uses these via overriding `addCastlingRule`,
+  `addFlexibleCastlingRule` and `addEnPassantRule`.
 
-**Unlocked:** Alice Chess (8×8 × 2). Castling, en passant and the pawn
-double-move are intentionally disabled — porting `AliceCastlingRule`,
-`AliceFlexibleCastlingRule` and `AliceEnPassantRule` (which wrap the
-base rules with the mirror-emptiness check) is still pending; without
-them the variant is fully playable but loses those niceties.
+**Unlocked:** Alice Chess (8×8 × 2). Fully playable, including castling,
+en passant and the pawn double-move.
 
 ---
 

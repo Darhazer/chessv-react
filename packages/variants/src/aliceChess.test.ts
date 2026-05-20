@@ -6,13 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { AliceChess } from './vMiscellaneous/aliceChess.js';
 
 describe('Alice Chess', () => {
-  it('the opening position has 12 root moves (8 single-step pawn pushes + 4 knight moves)', () => {
-    // Pawn double-moves are disabled in this Alice port because en passant
-    // needs the AliceEnPassantRule wrapper (still deferred).
+  it('the opening position has the canonical 20 root moves', () => {
+    // 16 pawn pushes (single + double) + 4 knight moves, exactly like
+    // standard chess. The AliceRule teleports each move's destination
+    // to the mirror sub-board.
     const game = new AliceChess();
     game.initialize();
     const { count } = game.getRootMoves();
-    expect(count).toBe(12);
+    expect(count).toBe(20);
   });
 
   it('an opening pawn move teleports the pawn to board B', () => {

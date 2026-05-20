@@ -7,19 +7,28 @@
  *  Distributed under the GNU General Public License, version 3 or later.
  *
  *  Ported from ChessV.Games/MiscellaneousGames/AliceChess.cs
- *
- *  Phase note: ChessV ships AliceCastlingRule, AliceFlexibleCastlingRule and
- *  AliceEnPassantRule that wrap their non-Alice counterparts with the
- *  cross-board emptiness check. Those are deferred in this initial port;
- *  Alice Chess plays with castling and en passant disabled, which is the
- *  most common simplification in published rules.
  ***************************************************************************/
 
-import { type Board, type Symmetry, TwoBoards } from '@chessv/engine';
-import { AliceRule, CastlingRule, EnPassantRule } from '@chessv/rules';
+import { type Board, type Direction, type PieceType, type Symmetry, TwoBoards } from '@chessv/engine';
+import {
+  AliceCastlingRule,
+  AliceEnPassantRule,
+  AliceFlexibleCastlingRule,
+  AliceRule,
+  FlexibleCastlingRule,
+} from '@chessv/rules';
 import { Chess } from '../v8x8/chess.js';
 
-/** Alice Chess — V. R. Parton (1953), the canonical two-board variant. */
+/**
+ * Alice Chess — V. R. Parton (1953), the canonical two-board variant.
+ *
+ * Standard chess on two parallel boards. Each move teleports the piece to
+ * the mirror square on the *other* sub-board (provided that square is
+ * empty). Castling, en passant and the pawn double-move keep their
+ * familiar semantics on the originating board, but with the additional
+ * Alice constraint that the destination(s) on the other board must also
+ * be empty. Those constraints live in the `Alice*` rule wrappers.
+ */
 export class AliceChess extends Chess {
   protected override createBoard(_numPlayers: number, numFiles: number, numRanks: number): Board {
     return new TwoBoards(numFiles, numRanks);
@@ -36,20 +45,31 @@ export class AliceChess extends Chess {
     // starts empty. Each rank is explicitly padded to 16 files so the
     // parser doesn't leave any squares uncovered.
     this.array = 'rnbqkbnr8/pppppppp8/16/16/16/16/PPPPPPPP8/RNBQKBNR8';
-    // Castling and en passant need wrapping Alice* rules; disable them
-    // for the initial port.
-    this.castling.value = 'None';
-    this.enPassant = false;
-    this.pawnDoubleMove = false;
+    // The Alice-wrapped rules cover both boards; re-enable the standard
+    // chess machinery they wrap.
+    this.castling.value = 'Standard';
+    this.enPassant = true;
+    this.pawnDoubleMove = true;
+  }
+
+  protected override addCastlingRule(): void {
+    this.castlingRule = new AliceCastlingRule();
+    this.addRule(this.castlingRule);
+  }
+
+  protected override addFlexibleCastlingRule(): FlexibleCastlingRule {
+    const rule = new AliceFlexibleCastlingRule();
+    this.castlingRule = rule;
+    this.addRule(rule);
+    return rule;
+  }
+
+  protected override addEnPassantRule(pawnType: PieceType, direction: Direction): void {
+    this.addRule(new AliceEnPassantRule(pawnType, this.getDirectionNumber(direction)));
   }
 
   protected override addRules(): void {
     super.addRules();
-    // Be defensive: if any base class wired up castling or en-passant,
-    // drop them — the Alice teleport would let pieces cross-board in ways
-    // those rules don't account for.
-    this.removeRule(CastlingRule);
-    this.removeRule(EnPassantRule);
     const alice = new AliceRule();
     alice.royalType = this.king;
     this.addRule(alice);

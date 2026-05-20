@@ -6,6 +6,11 @@
  * engine's Rule base class.
  */
 
+export {
+  AliceCastlingRule,
+  AliceEnPassantRule,
+  AliceFlexibleCastlingRule,
+} from './aliceCastlingRules.js';
 export { AliceRule } from './aliceRule.js';
 export { BareKingRule } from './bareKingRule.js';
 export { BasicPromotionRule } from './basicPromotionRule.js';

@@ -33,11 +33,13 @@ export class EnPassantRule extends Rule {
   readonly nDirection: number;
 
   private hashKeyIndex = 0;
-  private epSquares: Int32Array = new Int32Array(0);
-  private gameHistory: Int32Array = new Int32Array(0);
+  // `protected` so the Alice en-passant subclass can rewrite the e.p. square
+  // to land on the mirror sub-board.
+  protected epSquares: Int32Array = new Int32Array(0);
+  protected gameHistory: Int32Array = new Int32Array(0);
   /** `attackDirections[player][n]` — the pawn's capture directions per player. */
-  private attackDirections: number[][] = [];
-  private nAttackDirections = 0;
+  protected attackDirections: number[][] = [];
+  protected nAttackDirections = 0;
 
   constructor(pawnType: PieceType, nDirection: number) {
     super();
