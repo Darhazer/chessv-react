@@ -20,6 +20,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
 import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
+import { DEFAULT_PIECE_SET, PIECE_SETS } from '../pieceSets.js';
 import { useAiEngine } from '../useAiEngine.js';
 
 /** Build a fresh, initialized game for the named variant. */
@@ -91,6 +92,8 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const [colorSchemeName, setColorSchemeName] = useState(DEFAULT_SCHEME.name);
   const colorScheme =
     COLOR_SCHEMES.find((scheme) => scheme.name === colorSchemeName) ?? DEFAULT_SCHEME;
+  const [pieceSetName, setPieceSetName] = useState(DEFAULT_PIECE_SET);
+  const pieceSet = PIECE_SETS[pieceSetName] ?? null;
 
   const engine = useAiEngine(variantName);
   const game = gameRef.current;
@@ -287,6 +290,7 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           lastMove={game.highlightSquares}
           onSquareClick={handleSquareClick}
           colorScheme={colorScheme}
+          pieceSet={pieceSet}
         />
         {pendingPromotion !== null && (
           <div className="promotion-overlay">
@@ -357,6 +361,16 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
               {COLOR_SCHEMES.map((scheme) => (
                 <option key={scheme.name} value={scheme.name}>
                   {scheme.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Pieces
+            <select value={pieceSetName} onChange={(event) => setPieceSetName(event.target.value)}>
+              {Object.keys(PIECE_SETS).map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
