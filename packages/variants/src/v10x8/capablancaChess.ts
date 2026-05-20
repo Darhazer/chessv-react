@@ -9,9 +9,7 @@
  *  Ported from ChessV.Games/10x8/CapablancaChess.cs
  *
  *  Phase note: the C# `AddEvaluations` (king-safety / rook-type) is evaluation
- *  only and is deferred. The Capablanca variants using "Flexible" castling
- *  (Schoolbook, Grotesque, Ladorean, Univers, Carrera's) are deferred until
- *  the FlexibleCastlingRule is ported.
+ *  only and is deferred.
  ***************************************************************************/
 
 import { MirrorSymmetry, type PieceType } from '@chessv/engine';
@@ -106,5 +104,61 @@ export class ModernCarrerasChess extends CapablancaChess {
     this.name = "Modern Carrera's Chess";
     this.castling.value = 'Standard';
     this.array = 'ranbqkbncr/pppppppppp/10/10/10/10/PPPPPPPPPP/RANBQKBNCR';
+  }
+}
+
+/**
+ * Carrera's Chess — Pietro Carrera's 1617 setup. The earliest of the
+ * Capablanca-family variants; uses no castling at all.
+ */
+export class CarrerasChess extends CapablancaChess {
+  protected override setGameVariables(): void {
+    super.setGameVariables();
+    this.name = "Carrera's Chess";
+    this.castling.value = 'None';
+    this.array = 'rcnbkqbnar/pppppppppp/10/10/10/10/PPPPPPPPPP/RCNBKQBNAR';
+  }
+}
+
+/**
+ * Schoolbook Chess — Sam Trenholme's 2006 setup; uses flexible castling
+ * (king slides two or more files toward the corner piece).
+ */
+export class SchoolbookChess extends CapablancaChess {
+  protected override setGameVariables(): void {
+    super.setGameVariables();
+    this.name = 'Schoolbook Chess';
+    this.castling.value = 'Flexible';
+    this.array = 'rqnbakbncr/pppppppppp/10/10/10/10/PPPPPPPPPP/RQNBAKBNCR';
+  }
+}
+
+/** Grotesque Chess — Fergus Duniho's 2004 setup; flexible castling. */
+export class GrotesqueChess extends CapablancaChess {
+  protected override setGameVariables(): void {
+    super.setGameVariables();
+    this.name = 'Grotesque Chess';
+    this.castling.value = 'Flexible';
+    this.array = 'rbqnkcnabr/pppppppppp/10/10/10/10/PPPPPPPPPP/RBQNKCNABR';
+  }
+}
+
+/** Ladorean Chess — Bernhard U. Hermes's 2005 setup; flexible castling. */
+export class LadoreanChess extends CapablancaChess {
+  protected override setGameVariables(): void {
+    super.setGameVariables();
+    this.name = 'Ladorean Chess';
+    this.castling.value = 'Flexible';
+    this.array = 'rbqnkancbr/pppppppppp/10/10/10/10/PPPPPPPPPP/RBQNKANCBR';
+  }
+}
+
+/** Univers Chess — Fergus Duniho & Bruno Violet's 2006 setup; flexible castling. */
+export class UniversChess extends CapablancaChess {
+  protected override setGameVariables(): void {
+    super.setGameVariables();
+    this.name = 'Univers Chess';
+    this.castling.value = 'Flexible';
+    this.array = 'rbncqkanbr/pppppppppp/10/10/10/10/PPPPPPPPPP/RBNCQKANBR';
   }
 }

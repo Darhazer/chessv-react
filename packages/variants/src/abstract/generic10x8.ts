@@ -134,9 +134,35 @@ export abstract class Generic10x8 extends Generic__x8 {
         this.castlingMove(1, 'e8', 'c8', 'b8', 'd8', 'b');
         this.castlingMove(1, 'e8', 'g8', 'i8', 'f8', 'i');
       }
+    } else if (value === 'Flexible') {
+      // King slides two or more squares toward the corner piece, which
+      // jumps over to the adjacent square — see FlexibleCastlingRule.
+      this.addFlexibleCastlingRule();
+      if (kingSquare === 'f1') {
+        this.flexibleCastlingMove(0, 'f1', 'h1', 'j1', shredder ? 'J' : 'K');
+        this.flexibleCastlingMove(0, 'f1', 'd1', 'a1', shredder ? 'A' : 'Q');
+        this.flexibleCastlingMove(1, 'f8', 'h8', 'j8', shredder ? 'j' : 'k');
+        this.flexibleCastlingMove(1, 'f8', 'd8', 'a8', shredder ? 'a' : 'q');
+      } else {
+        this.flexibleCastlingMove(0, 'e1', 'c1', 'a1', 'A');
+        this.flexibleCastlingMove(0, 'e1', 'g1', 'j1', 'J');
+        this.flexibleCastlingMove(1, 'e8', 'c8', 'a8', 'a');
+        this.flexibleCastlingMove(1, 'e8', 'g8', 'j8', 'j');
+      }
+    } else if (value === 'Close-Rook Flexible') {
+      this.addFlexibleCastlingRule();
+      if (kingSquare === 'f1') {
+        this.flexibleCastlingMove(0, 'f1', 'h1', 'i1', 'I');
+        this.flexibleCastlingMove(0, 'f1', 'd1', 'b1', 'B');
+        this.flexibleCastlingMove(1, 'f8', 'h8', 'i8', 'i');
+        this.flexibleCastlingMove(1, 'f8', 'd8', 'b8', 'b');
+      } else {
+        this.flexibleCastlingMove(0, 'e1', 'c1', 'b1', 'B');
+        this.flexibleCastlingMove(0, 'e1', 'g1', 'i1', 'I');
+        this.flexibleCastlingMove(1, 'e8', 'c8', 'b8', 'b');
+        this.flexibleCastlingMove(1, 'e8', 'g8', 'i8', 'i');
+      }
     }
-    // "Flexible" and "Close-Rook Flexible" need the FlexibleCastlingRule
-    // (not yet ported) — variants relying on them are not registered.
   }
 
   /** Register the standard rook, bishop, knight and queen piece types. */

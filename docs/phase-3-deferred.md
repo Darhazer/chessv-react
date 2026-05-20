@@ -1,7 +1,7 @@
 # Phase 3 — deferred variants
 
-51 of ChessV's 160 variants are ported (see `git log --oneline | grep "Phase 3"`).
-The remaining ~109 are blocked on **engine extensions**, not on more variant work.
+The first Phase-3 batch ported 51 variants; a follow-up session ported **FlexibleCastlingRule** and **PromoteByReplacementRule**, unlocking 11 more — see clusters 1 and 2 below. The remaining ~98 are still blocked on the engine extensions described here.
+
 This document is a checklist for the engine work that would unlock each cluster.
 
 Each section names the work, points at the C# source to port, and lists the
@@ -24,49 +24,44 @@ pattern.
 
 ---
 
-## 1. Flexible castling
+## 1. Flexible castling ✅ DONE
 
-**Engine work:** port `ChessV.Games/Rules/FlexibleCastlingRule.cs` into
-`packages/rules/src/`. It generalises `CastlingRule` to slides of two **or
-more** squares, with the partner piece jumping to the adjacent square. Wire it
-into `GenericChess.addCastlingRule` (already has the helper
-`addFlexibleCastlingRule` in C#).
+**Status:** ported. `packages/rules/src/flexibleCastlingRule.ts` subclasses
+`CastlingRule`; `GenericChess` exposes `addFlexibleCastlingRule()` and
+`flexibleCastlingMove()`; `Generic10x8` and `Generic10x10` wire it through
+the `"Flexible"` / `"Close-Rook Flexible"` / `"2R Flexible"` castling choices.
 
-**Unlocks (~7):**
-
-- 8x8: would not unblock new variants (the existing Flexible castling choice
-  works once the rule exists).
-- 10x8: Carrera's Chess, Schoolbook Chess, Grotesque Chess, Ladorean Chess,
-  Univers Chess.
-- 11x10: a Wildebeest Chess castling style ("Wildebeest" choice).
-- 12x12: King's Court (needs both this and the bespoke King's-flight rule).
-- Colossus uses a custom "Colossus" flexible variant — port that on top.
+**Unlocked (5 variants registered):** Carrera's Chess, Schoolbook Chess,
+Grotesque Chess, Ladorean Chess, Univers Chess (all 10×8 Capablanca-family).
+Other variants in the original list (the Wildebeest-style castling on
+11×10, King's Court, Colossus's custom "Colossus" flexible variant) are
+still gated on additional bespoke work.
 
 ---
 
-## 2. Replacement / Grand / complex promotion
+## 2. Replacement / Grand promotion ✅ PARTIAL
 
-**Engine work:** port these `ChessV.Games/Rules/` files in order — they layer:
+**Status:** `PromoteByReplacementRule` is ported and wired through.
+- `packages/rules/src/promoteByReplacementRule.ts` with the
+  `PromotionOption` / `OptionalPromotionLocationDelegate` exports.
+- `GenericChess` handles the `"Replacement"` promotion choice (back-rank
+  zone). `Generic10x10` adds a `"Grand"` choice with the wider 8th–9th rank
+  optional zone.
 
-- `PromoteByReplacementRule.cs` — "Replacement" promotion (the piece morphs in
-  place when reaching the promotion zone; the choice depends on what's been
-  captured).
-- `ComplexPromotionRule.cs` — multi-rank, conditional promotion (Mecklenbeck,
-  Lemurian).
-- `ColorboundPromotionRestrictionRule.cs` — restricts promotion choices by
-  colour-binding (Lemurian).
+**Unlocked (6 variants registered):** Grand Chess, Opulent Chess, TenCubed
+Chess, Unicorn Grand Chess, Emperor's Game (10×10) — and FlexibleCastlingRule
+is a soft prerequisite for some of them.
 
-`GenericChess.setGameVariables` already declares `PromotionRule` as a
-ChoiceVariable with `"None"`, `"Standard"`, `"Replacement"`, `"Custom"`; wire
-`"Replacement"` to add `PromoteByReplacementRule` in `addRules`.
+**Still deferred — additional layered rules:**
 
-**Unlocks (~9):**
-
-- 8x8: Lemurian Shatranj, Mecklenbeck Chess.
-- 10x10: Grand Chess, Opulent Chess, Eurasian Chess, TenCubed Chess, Unicorn
-  Grand Chess, Emperor's Game.
-- 12x12: Gross Chess, Chess And A Half (also needs other rules — see below).
-- 9x10: Yang Qi (also needs the custom king-swap rule).
+- `ComplexPromotionRule.cs` — multi-rank, conditional promotion required by
+  Mecklenbeck Chess (8×8) and Lemurian Shatranj (8×8).
+- `ColorboundPromotionRestrictionRule.cs` — colour-binding restriction
+  required by Lemurian Shatranj.
+- Eurasian Chess (10×10) — also needs the xiangqi `KingFacingRule` and a
+  `PieceLocationRestrictionRule` (palace).
+- 12×12: Gross Chess, Chess And A Half — both need bespoke rules.
+- 9×10: Yang Qi — also needs the custom king-swap rule.
 
 ---
 
@@ -151,14 +146,12 @@ Each of these is a one-off and self-contained.
 
 Tackling the clusters above roughly in this order is the best return on effort:
 
-1. **Flexible castling** — small rule, unlocks ~7 variants.
-2. **Replacement promotion** — small-to-medium rule, unlocks ~9.
+1. ✅ **Flexible castling** — done. 5 variants unlocked.
+2. ✅ **Replacement promotion** — done (base rule). 6 variants unlocked.
+   Complex / colorbound promotion still pending.
 3. **Fischer-style castling** — 1 variant but historically important.
 4. **Multi-move turns** — 2–3 variants.
 5. **Drops / pockets** — 1 variant now but big future leverage.
 6. **Cylindrical geometry** — 1–2 variants.
 7. **Multi-board (Alice)** — 1 variant; substantial.
 8. **Bespoke rules** — one variant at a time; do these last.
-
-A reasonable Phase-3.5 milestone would be cluster 1 + 2 — about 16 more
-variants playable for a few weeks of engine work.

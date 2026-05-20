@@ -29,7 +29,11 @@ import {
   CastlingRule,
   CheckmateRule,
   EnPassantRule,
+  FlexibleCastlingRule,
   Move50Rule,
+  type OptionalPromotionLocationDelegate,
+  PromoteByReplacementRule,
+  PromotionOption,
   RepetitionDrawRule,
 } from '@chessv/rules';
 
@@ -91,8 +95,16 @@ export abstract class GenericChess extends Game {
         availablePromotionTypes,
         (loc: Location) => loc.rank === this.board.numRanks - 1,
       );
+    } else if (this.promotionRule.value === 'Replacement') {
+      this.promotingType ??= this.pawn;
+      // The default replacement zone is just the back rank; board-size
+      // subclasses (Generic10x10, Generic12x12, ...) override to widen it.
+      this.addPromoteByReplacementRule(this.promotingType, (loc: Location) =>
+        loc.rank === this.board.numRanks - 1
+          ? PromotionOption.MustPromote
+          : PromotionOption.CannotPromote,
+      );
     }
-    // (The "Replacement" promotion rule is ported in a later phase.)
 
     // *** EN PASSANT *** //
     if (this.enPassant && this.pawn.enabled) {
@@ -146,6 +158,18 @@ export abstract class GenericChess extends Game {
     this.addRule(this.castlingRule);
   }
 
+  /**
+   * Add a flexible castling rule (the king may slide two or more squares
+   * toward the partner piece). Used by 10×8 and wider boards where the
+   * standard "king moves two" definition is too restrictive.
+   */
+  protected addFlexibleCastlingRule(): FlexibleCastlingRule {
+    const rule = new FlexibleCastlingRule();
+    this.castlingRule = rule;
+    this.addRule(rule);
+    return rule;
+  }
+
   /** Register one castling move, using square notation. */
   protected castlingMove(
     player: number,
@@ -161,6 +185,32 @@ export abstract class GenericChess extends Game {
       this.notationToSquare(kingTo),
       this.notationToSquare(otherFrom),
       this.notationToSquare(otherTo),
+      privChar,
+    );
+  }
+
+  /**
+   * Register one flexible-castling move. The king's minimum destination is
+   * `kingTo`; it may slide further toward the partner piece, which always
+   * jumps to the king's other side. `allowMoveOntoCastlingPiece` lets the
+   * king land on the partner piece's starting square in the limit.
+   */
+  protected flexibleCastlingMove(
+    player: number,
+    kingFrom: string,
+    kingTo: string,
+    otherFrom: string,
+    privChar: string,
+    allowMoveOntoCastlingPiece = false,
+  ): void {
+    // FlexibleCastlingRule repurposes the `otherTo` field as a one-square
+    // extension flag (0 or 1) — see flexibleCastlingRule.ts.
+    this.castlingRule!.addCastlingMove(
+      player,
+      this.notationToSquare(kingFrom),
+      this.notationToSquare(kingTo),
+      this.notationToSquare(otherFrom),
+      allowMoveOntoCastlingPiece ? 1 : 0,
       privChar,
     );
   }
@@ -181,5 +231,18 @@ export abstract class GenericChess extends Game {
         originCondition,
       ),
     );
+  }
+
+  /**
+   * Add a "promote by replacement" rule. Pawns reaching the promotion zone
+   * may swap themselves for any one of the player's previously-captured
+   * pieces (rather than choosing freely from a fixed list).
+   */
+  protected addPromoteByReplacementRule(
+    promotingType: PieceType,
+    condition: OptionalPromotionLocationDelegate,
+  ): void {
+    this.promotingType ??= promotingType;
+    this.addRule(new PromoteByReplacementRule(promotingType, condition));
   }
 }

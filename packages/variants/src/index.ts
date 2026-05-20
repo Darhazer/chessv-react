@@ -27,10 +27,15 @@ import { WildCastle } from './v8x8/wildCastle.js';
 import {
   BirdsChess,
   CapablancaChess,
+  CarrerasChess,
   EmbassyChess,
   GothicChess,
+  GrotesqueChess,
+  LadoreanChess,
   ModernCarrerasChess,
   OptiChess,
+  SchoolbookChess,
+  UniversChess,
   VictorianChess,
 } from './v10x8/capablancaChess.js';
 import { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
@@ -49,6 +54,13 @@ import { JanusKamilChess } from './v12x10/janusKamilChess.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
+import {
+  EmperorsGame,
+  GrandChess,
+  OpulentChess,
+  TenCubedChess,
+  UnicornGrandChess,
+} from './v10x10/grandChess.js';
 import { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 import { GreatChess } from './v10x10/greatChess.js';
 import { RomanChess } from './v10x10/romanChess.js';
@@ -90,10 +102,15 @@ export { WildCastle } from './v8x8/wildCastle.js';
 export {
   BirdsChess,
   CapablancaChess,
+  CarrerasChess,
   EmbassyChess,
   GothicChess,
+  GrotesqueChess,
+  LadoreanChess,
   ModernCarrerasChess,
   OptiChess,
+  SchoolbookChess,
+  UniversChess,
   VictorianChess,
 } from './v10x8/capablancaChess.js';
 export { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
@@ -112,6 +129,13 @@ export { JanusKamilChess } from './v12x10/janusKamilChess.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
+export {
+  EmperorsGame,
+  GrandChess,
+  OpulentChess,
+  TenCubedChess,
+  UnicornGrandChess,
+} from './v10x10/grandChess.js';
 export { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 export { GreatChess } from './v10x10/greatChess.js';
 export { RomanChess } from './v10x10/romanChess.js';
@@ -329,6 +353,64 @@ registerVariant({
 });
 
 registerVariant({
+  name: 'Grand Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant', 'Popular'],
+  invented: '1984',
+  inventedBy: 'Christian Freeling',
+  description:
+    "Christian Freeling's popular 10 x 10 variant with the missing compound pieces " +
+    'and promote-by-replacement on the 8th-10th ranks.',
+  create: () => new GrandChess(),
+});
+
+registerVariant({
+  name: 'Opulent Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2005',
+  inventedBy: 'Greg Strong',
+  description: 'Expanded Grand Chess with ten distinct piece types — Wizards and Lions join the line-up.',
+  create: () => new OpulentChess(),
+});
+
+registerVariant({
+  name: 'TenCubed Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2005',
+  inventedBy: 'David Paolowich',
+  description: 'A 10 x 10 variant with Wizards and Champions on a recessed third rank.',
+  create: () => new TenCubedChess(),
+});
+
+registerVariant({
+  name: 'Unicorn Grand Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'David Paulowich; Greg Strong',
+  description: 'A Grand-Chess descendant swapping the Cardinal for a Unicorn and adding a Lion.',
+  colorScheme: 'Lesotho',
+  create: () => new UnicornGrandChess(),
+});
+
+registerVariant({
+  name: "Emperor's Game",
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant', 'Historic'],
+  invented: '1840',
+  inventedBy: 'L. Tressan',
+  description: 'A historic 10 x 10 variant from 19th-century Germany with a leaping General and Adjutant.',
+  create: () => new EmperorsGame(),
+});
+
+registerVariant({
   name: 'Roman Chess',
   files: 10,
   ranks: 10,
@@ -495,6 +577,63 @@ registerVariant({
   description: 'A modern arrangement of the historic Carrera 10 x 8 chess variant.',
   colorScheme: 'Buckingham Green',
   create: () => new ModernCarrerasChess(),
+});
+
+registerVariant({
+  name: "Carrera's Chess",
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant', 'Historic'],
+  invented: '1617',
+  inventedBy: 'Pietro Carrera',
+  description: "Pietro Carrera's 1617 10 x 8 variant — the earliest of the Capablanca family.",
+  create: () => new CarrerasChess(),
+});
+
+registerVariant({
+  name: 'Schoolbook Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2006',
+  inventedBy: 'Sam Trenholme',
+  description: 'A Capablanca arrangement with flexible castling.',
+  colorScheme: 'Sahara',
+  create: () => new SchoolbookChess(),
+});
+
+registerVariant({
+  name: 'Grotesque Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2004',
+  inventedBy: 'Fergus Duniho',
+  description: 'A Capablanca arrangement by Fergus Duniho using flexible castling.',
+  colorScheme: 'Cinnamon',
+  create: () => new GrotesqueChess(),
+});
+
+registerVariant({
+  name: 'Ladorean Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2005',
+  inventedBy: 'Bernhard U. Hermes',
+  description: "Hermes's 2005 Capablanca arrangement using flexible castling.",
+  create: () => new LadoreanChess(),
+});
+
+registerVariant({
+  name: 'Univers Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2006',
+  inventedBy: 'Fergus Duniho; Bruno Violet',
+  description: 'A Capablanca arrangement by Duniho and Violet using flexible castling.',
+  create: () => new UniversChess(),
 });
 
 registerVariant({
