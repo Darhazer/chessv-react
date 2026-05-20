@@ -24,6 +24,23 @@ import { RevisedChess } from './v8x8/revisedChess.js';
 import { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 import { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 import { WildCastle } from './v8x8/wildCastle.js';
+import {
+  BirdsChess,
+  CapablancaChess,
+  EmbassyChess,
+  GothicChess,
+  ModernCarrerasChess,
+  OptiChess,
+  VictorianChess,
+} from './v10x8/capablancaChess.js';
+import { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
+import { GreatShatranj, GreatShatranjR } from './v10x8/greatShatranj.js';
+import { JanusChess } from './v10x8/janusChess.js';
+import { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
+import { NewChancellorChess } from './v10x8/newChancellorChess.js';
+import { ChancellorChess } from './v9x9/chancellorChess.js';
+import { MinistersChess } from './v9x9/ministersChess.js';
+import { Warochess } from './v9x9/warochess.js';
 import { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 import { GreatChess } from './v10x10/greatChess.js';
 import { RomanChess } from './v10x10/romanChess.js';
@@ -36,6 +53,9 @@ import { registerVariant } from './registry.js';
 export { GenericChess } from './abstract/genericChess.js';
 export { Generic__x8 } from './abstract/generic__x8.js';
 export { Generic8x8 } from './abstract/generic8x8.js';
+export { Generic10x8 } from './abstract/generic10x8.js';
+export { Generic__x9 } from './abstract/generic__x9.js';
+export { Generic9x9 } from './abstract/generic9x9.js';
 export { Generic__x10 } from './abstract/generic__x10.js';
 export { Generic10x10 } from './abstract/generic10x10.js';
 export { BerolinaChess } from './v8x8/berolinaChess.js';
@@ -53,6 +73,23 @@ export { RevisedChess } from './v8x8/revisedChess.js';
 export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { WildCastle } from './v8x8/wildCastle.js';
+export {
+  BirdsChess,
+  CapablancaChess,
+  EmbassyChess,
+  GothicChess,
+  ModernCarrerasChess,
+  OptiChess,
+  VictorianChess,
+} from './v10x8/capablancaChess.js';
+export { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
+export { GreatShatranj, GreatShatranjR } from './v10x8/greatShatranj.js';
+export { JanusChess } from './v10x8/janusChess.js';
+export { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
+export { NewChancellorChess } from './v10x8/newChancellorChess.js';
+export { ChancellorChess } from './v9x9/chancellorChess.js';
+export { MinistersChess } from './v9x9/ministersChess.js';
+export { Warochess } from './v9x9/warochess.js';
 export { GildedGrandShatranj, GrandShatranj } from './v10x10/grandShatranj.js';
 export { GreatChess } from './v10x10/greatChess.js';
 export { RomanChess } from './v10x10/romanChess.js';
@@ -356,4 +393,187 @@ registerVariant({
   inventedBy: 'Joe Joyce',
   description: 'The Grand Shatranj setup featuring both the Rook and the Lightning Warmachine.',
   create: () => new GildedGrandShatranj(),
+});
+
+// *** 10x8 VARIANTS *** //
+
+registerVariant({
+  name: 'Capablanca Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant', 'Historic', 'Popular'],
+  invented: '1940',
+  inventedBy: 'Jose Raul Capablanca',
+  description: "Capablanca's 10 x 8 variant adding the Archbishop and Chancellor compounds.",
+  create: () => new CapablancaChess(),
+});
+
+registerVariant({
+  name: "Bird's Chess",
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant', 'Historic'],
+  invented: '1874',
+  inventedBy: 'Henry Bird',
+  description: 'A Capablanca-family setup from 1874 by Henry Bird.',
+  create: () => new BirdsChess(),
+});
+
+registerVariant({
+  name: 'Embassy Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2005',
+  inventedBy: 'Kevin Hill',
+  description: 'A Capablanca-family setup from 2005 by Kevin Hill.',
+  create: () => new EmbassyChess(),
+});
+
+registerVariant({
+  name: 'Gothic Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2002',
+  inventedBy: 'Ed Trice',
+  description: 'A Capablanca-family setup from 2002 by Ed Trice.',
+  create: () => new GothicChess(),
+});
+
+registerVariant({
+  name: 'Victorian Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2005',
+  inventedBy: 'David Paulowich; John Kipling Lewis',
+  description: 'A Capablanca-family setup with close-rook castling.',
+  create: () => new VictorianChess(),
+});
+
+registerVariant({
+  name: 'Opti Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2006',
+  inventedBy: 'Derek Nalls',
+  description: 'A Capablanca-family setup from 2006 by Derek Nalls.',
+  create: () => new OptiChess(),
+});
+
+registerVariant({
+  name: "Modern Carrera's Chess",
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '1999',
+  inventedBy: 'Fergus Duniho; Sam Trenholme',
+  description: 'A modern arrangement of the historic Carrera 10 x 8 chess variant.',
+  colorScheme: 'Buckingham Green',
+  create: () => new ModernCarrerasChess(),
+});
+
+registerVariant({
+  name: 'Capablanca Shatranj',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Capablanca Variant'],
+  invented: '2006',
+  inventedBy: 'Christine Bagley-Jones',
+  description: 'A Capablanca-board variant with the leaping Minister and High Priestess.',
+  create: () => new CapablancaShatranj(),
+});
+
+registerVariant({
+  name: 'Janus Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant', 'Popular'],
+  invented: '1978',
+  inventedBy: 'Werner Schöndorf',
+  description: 'A 10 x 8 variant with two Januses (Archbishops) and long castling.',
+  create: () => new JanusChess(),
+});
+
+registerVariant({
+  name: 'New Chancellor Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '1997',
+  inventedBy: 'David Paulowich',
+  description: 'A 10 x 8 variant with the Chancellors in the corners.',
+  create: () => new NewChancellorChess(),
+});
+
+registerVariant({
+  name: 'Lions and Unicorns Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2005',
+  inventedBy: 'David Paulowich',
+  description: 'A 10 x 8 variant adding the Lion and the Unicorn (Bishop + Nightrider).',
+  colorScheme: 'Lesotho',
+  create: () => new LionsAndUnicornsChess(),
+});
+
+registerVariant({
+  name: 'Great Shatranj D',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description: "Joe Joyce's 10 x 8 variant of strong leaping pieces (Dabbabah form).",
+  create: () => new GreatShatranj('Great Shatranj D'),
+});
+
+registerVariant({
+  name: 'Great Shatranj R',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description: "Joe Joyce's 10 x 8 variant of strong leaping pieces (Rook form).",
+  create: () => new GreatShatranjR(),
+});
+
+// *** 9x9 VARIANTS *** //
+
+registerVariant({
+  name: 'Chancellor Chess',
+  files: 9,
+  ranks: 9,
+  tags: ['Chess Variant', 'Historic'],
+  invented: '1889',
+  inventedBy: 'Ben Foster',
+  description: 'An 1889 9 x 9 variant adding the Chancellor (Rook + Knight).',
+  create: () => new ChancellorChess(),
+});
+
+registerVariant({
+  name: 'Ministers Chess',
+  files: 9,
+  ranks: 9,
+  tags: ['Chess Variant'],
+  invented: '1975',
+  inventedBy: 'Michael Corinthios',
+  description: 'A 9 x 9 variant with the King flanked by two Ministers (Queens).',
+  create: () => new MinistersChess(),
+});
+
+registerVariant({
+  name: 'Warochess',
+  files: 9,
+  ranks: 9,
+  tags: ['Chess Variant'],
+  invented: '2010',
+  inventedBy: 'Eric Warolus',
+  description: 'A totally symmetric 9 x 9 variant adding a Queen, with no castling.',
+  colorScheme: 'Luna Decorabat',
+  create: () => new Warochess(),
 });
