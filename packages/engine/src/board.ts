@@ -65,8 +65,10 @@ export class Board {
 
   // *** SQUARE / DIRECTION TABLES *** //
   private readonly squares: (Piece | null)[];
-  private readonly fileBySquare: Int32Array;
-  private readonly rankBySquare: Int32Array;
+  // `protected` so geometry subclasses (e.g. BoardWithPockets) can stamp in
+  // file/rank metadata for their extended (off-board) squares.
+  protected readonly fileBySquare: Int32Array;
+  protected readonly rankBySquare: Int32Array;
   private readonly distances: Int32Array[];
   private readonly pstInSmallCenter: Int32Array;
   private readonly pstInLargeCenter: Int32Array;
@@ -77,7 +79,9 @@ export class Board {
   private readonly fileLookup = new Map<string, number>();
 
   /** `nextStep[direction][square]` → next square, or `NOT_CONNECTED`. */
-  private nextStep: Int32Array[] = [];
+  // `protected` so geometry subclasses (e.g. TwoBoards) can post-process
+  // the matrix to disconnect specific square pairs.
+  protected nextStep: Int32Array[] = [];
   /** `flipSquare[player][square]` → square translated into the player's frame. */
   private flipSquare: Int32Array[] = [];
   /** `directionLookup[from][to]` → direction number, or -1 if not aligned. */

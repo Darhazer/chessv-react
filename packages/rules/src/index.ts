@@ -6,6 +6,7 @@
  * engine's Rule base class.
  */
 
+export { AliceRule } from './aliceRule.js';
 export { BareKingRule } from './bareKingRule.js';
 export { BasicPromotionRule } from './basicPromotionRule.js';
 export { BerolinaEnPassantRule } from './berolinaEnPassantRule.js';
@@ -20,6 +21,7 @@ export {
   MarseillaisMoveCompletionRule,
 } from './multiMoveCompletionRules.js';
 export { PawnSwapRule } from './pawnSwapRule.js';
+export { PocketDropRule } from './pocketDropRule.js';
 export {
   PromoteByReplacementRule,
   PromotionOption,

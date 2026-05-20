@@ -11,6 +11,7 @@
 
 import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
+import { ChessWithPockets } from './v8x8/chessWithPockets.js';
 import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
 import { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 import { Chess256 } from './v8x8/chess256.js';
@@ -55,6 +56,7 @@ import { CourierChess } from './v12x8/courierChess.js';
 import { JanusKamilChess } from './v12x10/janusKamilChess.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
+import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
 import {
   EmperorsGame,
@@ -100,6 +102,7 @@ export { RelativeRoyaltyChess } from './v8x8/relativeRoyaltyChess.js';
 export { RevisedChess } from './v8x8/revisedChess.js';
 export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
+export { ChessWithPockets } from './v8x8/chessWithPockets.js';
 export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
 export { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 export { WildCastle } from './v8x8/wildCastle.js';
@@ -132,6 +135,7 @@ export { CourierChess } from './v12x8/courierChess.js';
 export { JanusKamilChess } from './v12x10/janusKamilChess.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
+export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
 export {
   EmperorsGame,
@@ -395,6 +399,20 @@ registerVariant({
     'Both sides play two moves per turn (white opens with one). The king is a ' +
     'normal piece — there is no check; you win by capturing it.',
   create: () => new DoublemoveChess(),
+});
+
+registerVariant({
+  name: 'Pocket Knight',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Popular'],
+  invented: 'circa 1900',
+  inventedBy: 'Unknown',
+  description:
+    'Standard chess plus a Knight in each side’s pocket. On any turn a player ' +
+    'may, in lieu of a move, drop their pocket Knight onto any empty board square.',
+  colorScheme: 'Sahara',
+  create: () => new ChessWithPockets(),
 });
 
 registerVariant({
@@ -902,4 +920,18 @@ registerVariant({
   description:
     'A 12 x 7 variant by Tomas Forsman with both colors interleaved across the back ranks.',
   create: () => new VikingChess(),
+});
+
+registerVariant({
+  name: 'Alice Chess',
+  files: 16,
+  ranks: 8,
+  tags: ['Chess Variant', 'Multiple Boards', 'Historic', 'Popular'],
+  invented: '1953',
+  inventedBy: 'V. R. Parton',
+  description:
+    'Standard chess on two parallel boards: every move teleports the piece to ' +
+    'the corresponding square on the other board, provided that square is empty.',
+  colorScheme: 'Sublimation',
+  create: () => new AliceChess(),
 });

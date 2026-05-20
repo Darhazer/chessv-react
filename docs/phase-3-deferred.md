@@ -1,6 +1,6 @@
 # Phase 3 — deferred variants
 
-The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, and the **multi-move completion rules**, unlocking 15 more (clusters 1–4 below). The remaining ~94 are still blocked on the engine extensions described here.
+The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, the **multi-move completion rules**, **pocket drops** and **two-board (Alice) geometry**, unlocking 17 more (clusters 1–5 and 7 below). The remaining ~92 are still blocked on the engine extensions described here.
 
 This document is a checklist for the engine work that would unlock each cluster.
 
@@ -90,16 +90,21 @@ Larger-board multi-move variants would slot in trivially if any exist.
 
 ---
 
-## 5. Drop / pocket squares
+## 5. Drop / pocket squares ✅ DONE (single-piece pocket)
 
-**Engine work:** virtual off-board squares (`NumSquaresExtended >
-NumSquares`) for held pieces; pieces enter the board via "Drop" moves.
-`ChessV.Games/Rules/Pocket/` has the rules; `ChessV.Base/Board` already
-distinguishes `NumSquares` from `NumSquaresExtended`, so the wiring is
-mostly: pocket initialisation, drop-square notation, drop move generation.
+**Status:** ported.
+- `packages/engine/src/boardWithPockets.ts` — `BoardWithPockets` subclass:
+  one extra "pocket" square per player, with `file === -1` /
+  `rank === player`. The base `Board` already supports the extended-squares
+  region; the subclass just stamps the pocket file/rank metadata and
+  overrides `locationToSquare` for `file < 0`.
+- `packages/rules/src/pocketDropRule.ts` — generates `MoveType.Drop` moves
+  from a player's pocket onto any empty board square, and parses the
+  `pieces in hand` FEN field on position load.
 
-**Unlocks:** Chess With Pockets (8x8), plus the future Shogi/Crazyhouse-style
-variants. Also a prerequisite for the Shogi family in a later port.
+**Unlocked:** Pocket Knight / Chess With Pockets (8×8). Multi-piece hands
+(Shogi/Crazyhouse) will extend this rule when the Shogi family lands —
+the pocket-square infrastructure generalises naturally.
 
 ---
 
@@ -115,15 +120,24 @@ move-deduplication path. ChessV `Game.deduplicateMoves` flag already exists.
 
 ---
 
-## 7. Multi-board geometry
+## 7. Multi-board geometry ✅ DONE (minimal Alice)
 
-**Engine work:** Alice Chess plays on two parallel 8×8 boards; a moved piece
-teleports to the corresponding square on the other board (gated on
-emptiness). Needs a two-board `Board` subclass + an `AliceRule` that performs
-the teleport, plus `AliceCastlingRule` / `AliceEnPassantRule` /
-`AliceFlexibleCastlingRule` variants. Source: `ChessV.Games/Rules/Alice/`.
+**Status:** ported.
+- `packages/engine/src/twoBoards.ts` — `TwoBoards` subclass holds two
+  side-by-side `boardFiles × numRanks` sub-boards (so `numFiles ==
+  2 * boardFiles`). Its `buildNextStepMatrix` snips the connection
+  between file `boardFiles - 1` and file `boardFiles` so sliders can't
+  cross the join.
+- `packages/rules/src/aliceRule.ts` — intercepts every `StandardMove` /
+  `StandardCapture` and redirects the destination to the mirror square
+  on the other sub-board, gated on emptiness. King moves additionally
+  check that the originating board's mirror isn't attacked.
 
-**Unlocks (1):** Alice Chess.
+**Unlocked:** Alice Chess (8×8 × 2). Castling, en passant and the pawn
+double-move are intentionally disabled — porting `AliceCastlingRule`,
+`AliceFlexibleCastlingRule` and `AliceEnPassantRule` (which wrap the
+base rules with the mirror-emptiness check) is still pending; without
+them the variant is fully playable but loses those niceties.
 
 ---
 
@@ -154,7 +168,9 @@ Tackling the clusters above roughly in this order is the best return on effort:
    Complex / colorbound promotion still pending.
 3. ✅ **Fischer-style castling** — done. 2 variants unlocked.
 4. ✅ **Multi-move turns** — done. 2 variants unlocked.
-5. **Drops / pockets** — 1 variant now but big future leverage.
+5. ✅ **Drops / pockets** — done (single-piece pocket). Pocket Knight unlocked;
+   Shogi/Crazyhouse hands extend this naturally.
 6. **Cylindrical geometry** — 1–2 variants.
-7. **Multi-board (Alice)** — 1 variant; substantial.
+7. ✅ **Multi-board (Alice)** — done. Alice Chess unlocked (castling /
+   en passant disabled pending Alice-wrapped rules).
 8. **Bespoke rules** — one variant at a time; do these last.

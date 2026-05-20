@@ -35,6 +35,8 @@ export {
 
 // *** CORE MODEL *** //
 export { Board, MAX_FILES, MAX_RANKS, MAX_SQUARES, NOT_CONNECTED } from './board.js';
+export { BoardWithPockets } from './boardWithPockets.js';
+export { TwoBoards } from './twoBoards.js';
 export { BitBoard } from './bitBoard.js';
 export { BoardMoveStack } from './boardMoveStack.js';
 export { ChoiceVariable } from './choiceVariable.js';
