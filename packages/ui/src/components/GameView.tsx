@@ -5,7 +5,15 @@
  * Web Worker). The engine `Game` object is mutable and lives in a ref; a
  * version counter forces re-renders after each mutation.
  */
-import { type Game, MoveType, type MoveInfo, moveTypeHasProperty } from '@chessv/engine';
+import {
+  applyMoveToken,
+  exportPgn,
+  type Game,
+  importPgn,
+  MoveType,
+  type MoveInfo,
+  moveTypeHasProperty,
+} from '@chessv/engine';
 import { createVariant } from '@chessv/variants';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
@@ -73,6 +81,9 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const [aiSide, setAiSide] = useState<AiSide>('off');
   const [aiDepth, setAiDepth] = useState(4);
   const [thinking, setThinking] = useState(false);
+  const [pgnMode, setPgnMode] = useState<'export' | 'import' | null>(null);
+  const [pgnText, setPgnText] = useState('');
+  const [pgnError, setPgnError] = useState<string | null>(null);
 
   const engine = useAiEngine(variantName);
   const game = gameRef.current;
@@ -167,11 +178,69 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
     forceUpdate();
   };
 
+  const openExportPgn = (): void => {
+    setPgnText(exportPgn(game, game.getMoveHistory(), { Variant: variantName }));
+    setPgnError(null);
+    setPgnMode('export');
+  };
+
+  const openImportPgn = (): void => {
+    setPgnText('');
+    setPgnError(null);
+    setPgnMode('import');
+  };
+
+  const closePgnDialog = (): void => {
+    setPgnMode(null);
+    setPgnText('');
+    setPgnError(null);
+  };
+
+  const loadPgn = (): void => {
+    try {
+      const parsed = importPgn(pgnText);
+      const next = createGame(variantName);
+      for (const token of parsed.moves) applyMoveToken(next, token);
+      gameRef.current = next;
+      const played = next.getMoveHistory();
+      moveHashes.current = played.map((m) => m.hash);
+      setHistory(played.map((m) => describeMove(next, m)));
+      setSelectedSquare(null);
+      setPendingPromotion(null);
+      setThinking(false);
+      aiBusy.current = false;
+      closePgnDialog();
+      forceUpdate();
+    } catch (error) {
+      setPgnError(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const copyPgn = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(pgnText);
+    } catch {
+      // Clipboard API can fail in non-secure contexts — the user can still
+      // copy manually from the textarea.
+    }
+  };
+
   const legalTargets = new Set<number>(
     selectedSquare === null
       ? []
       : moves.filter((m) => m.fromSquare === selectedSquare).map((m) => m.toSquare),
   );
+
+  // Captured pieces, grouped by the capturing side. Each captured piece is
+  // shown as its (now-lost) owner's glyph.
+  const capturedByWhite: string[] = [];
+  const capturedByBlack: string[] = [];
+  for (const played of game.getMoveHistory()) {
+    if (played.pieceCaptured !== null) {
+      const glyph = pieceGlyph(played.pieceCaptured.pieceType.internalName);
+      (played.player === 0 ? capturedByWhite : capturedByBlack).push(glyph);
+    }
+  }
 
   const status = !game.result.isNone
     ? game.result.isDraw
@@ -215,6 +284,12 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           <button type="button" onClick={handleUndo} disabled={history.length === 0 || thinking}>
             Undo
           </button>
+          <button type="button" onClick={openExportPgn} disabled={history.length === 0}>
+            Export PGN
+          </button>
+          <button type="button" onClick={openImportPgn} disabled={thinking}>
+            Import PGN
+          </button>
         </div>
 
         <div className="ai-controls">
@@ -245,6 +320,19 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           </p>
         )}
 
+        {(capturedByWhite.length > 0 || capturedByBlack.length > 0) && (
+          <div className="captured">
+            <div className="captured-row">
+              <span className="captured-label">White captured</span>
+              <span className="captured-glyphs dark-glyphs">{capturedByWhite.join(' ')}</span>
+            </div>
+            <div className="captured-row">
+              <span className="captured-label">Black captured</span>
+              <span className="captured-glyphs light-glyphs">{capturedByBlack.join(' ')}</span>
+            </div>
+          </div>
+        )}
+
         <ol className="move-list">
           {history.map((text, index) => (
             // The move list is append-only; index is a stable key here.
@@ -253,6 +341,36 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           ))}
         </ol>
       </aside>
+
+      {pgnMode !== null && (
+        <div className="pgn-dialog-backdrop" onClick={closePgnDialog}>
+          <div className="pgn-dialog" onClick={(event) => event.stopPropagation()}>
+            <h3>{pgnMode === 'export' ? 'Export PGN' : 'Import PGN'}</h3>
+            <textarea
+              value={pgnText}
+              onChange={(event) => setPgnText(event.target.value)}
+              readOnly={pgnMode === 'export'}
+              spellCheck={false}
+              rows={14}
+            />
+            {pgnError !== null && <p className="pgn-error">{pgnError}</p>}
+            <div className="pgn-dialog-actions">
+              {pgnMode === 'export' ? (
+                <button type="button" onClick={() => void copyPgn()}>
+                  Copy to clipboard
+                </button>
+              ) : (
+                <button type="button" onClick={loadPgn} disabled={pgnText.trim() === ''}>
+                  Load
+                </button>
+              )}
+              <button type="button" onClick={closePgnDialog}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

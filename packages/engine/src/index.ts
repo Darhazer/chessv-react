@@ -38,6 +38,8 @@ export { Board, MAX_FILES, MAX_RANKS, MAX_SQUARES, NOT_CONNECTED } from './board
 export { BitBoard } from './bitBoard.js';
 export { BoardMoveStack } from './boardMoveStack.js';
 export { ChoiceVariable } from './choiceVariable.js';
+export { applyMoveToken, exportPgn, importPgn, pgnDateToday } from './pgn.js';
+export type { ParsedPgn, PgnTags } from './pgn.js';
 export { ExObject } from './exObject.js';
 export { FEN } from './fen.js';
 export { Game, NodeType } from './game.js';

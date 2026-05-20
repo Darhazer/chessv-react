@@ -997,7 +997,9 @@ export class Game extends ExObject {
 
     this.boardMoveStack.makingMove(this.moveLists[1]!, move);
     this.gameHistoryTurnNumbers[this.gameHistory.length] = this.gameTurnNumber;
-    this.gameHistory.push(move);
+    // `move` lives in moveLists[1] and is reused on the next generation —
+    // clone it so the history snapshot is stable.
+    this.gameHistory.push(move.clone());
 
     for (const rule of this.rules) rule.moveMade(move, this.ply);
 
@@ -1100,6 +1102,11 @@ export class Game extends ExObject {
   /** The side to move after the current move completes. */
   get nextSide(): number {
     return this.moveCompletionRule.getNextSide();
+  }
+
+  /** Every move played so far, in order. */
+  getMoveHistory(): readonly MoveInfo[] {
+    return this.gameHistory;
   }
 
   /** A move from the game record by its index. */
