@@ -52,12 +52,22 @@ still gated on additional bespoke work.
 Chess, Unicorn Grand Chess, Emperor's Game (10×10) — and FlexibleCastlingRule
 is a soft prerequisite for some of them.
 
-**Still deferred — additional layered rules:**
+**Layered promotion rules — done.**
+- `packages/rules/src/complexPromotionRule.ts` — `ComplexPromotionRule`
+  bundles per-piece-type promotion capabilities (free-choice + replacement
+  targets, with an optional from/to condition). Unlocks Mecklenbeck Chess
+  (8×8) and is a prerequisite for Lemurian Shatranj.
+- `packages/rules/src/colorboundPromotionRestrictionRule.ts` — rejects a
+  promotion / replacement that would leave the player with two pieces of
+  the same colour-bound type on the same slice. Ready for Lemurian when
+  its multi-path piece types (BentShaman, BentHero, SlidingGeneral) land.
 
-- `ComplexPromotionRule.cs` — multi-rank, conditional promotion required by
-  Mecklenbeck Chess (8×8) and Lemurian Shatranj (8×8).
-- `ColorboundPromotionRestrictionRule.cs` — colour-binding restriction
-  required by Lemurian Shatranj.
+**Unlocked:** Mecklenbeck Chess (8×8).
+
+**Still deferred:**
+
+- Lemurian Shatranj (8×8) — blocked on the multi-path piece machinery
+  (BentShaman, BentHero, SlidingGeneral, all in `Pieces/MultiPath.cs`).
 - Eurasian Chess (10×10) — also needs the xiangqi `KingFacingRule` and a
   `PieceLocationRestrictionRule` (palace).
 - 12×12: Gross Chess, Chess And A Half — both need bespoke rules.

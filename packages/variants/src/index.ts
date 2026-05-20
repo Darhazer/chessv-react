@@ -13,6 +13,7 @@ import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
 import { ChessWithPockets } from './v8x8/chessWithPockets.js';
 import { CylindricalChess } from './v8x8/cylindricalChess.js';
+import { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
 import { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 import { Chess256 } from './v8x8/chess256.js';
@@ -106,6 +107,7 @@ export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { ChessWithPockets } from './v8x8/chessWithPockets.js';
 export { CylindricalChess } from './v8x8/cylindricalChess.js';
+export { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
 export { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
 export { WildCastle } from './v8x8/wildCastle.js';
@@ -416,6 +418,19 @@ registerVariant({
     "Standard chess but the board's left and right edges are connected — pieces " +
     'wrap around as if the board were rolled into a cylinder.',
   create: () => new CylindricalChess(),
+});
+
+registerVariant({
+  name: 'Mecklenbeck Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Historic'],
+  invented: '1973',
+  inventedBy: 'Bernd Eickenscheidt; B. Schwarzkopf',
+  description:
+    'Standard chess with an extended promotion zone: pawns may promote on the ' +
+    '6th or 7th rank, and must promote on the 8th.',
+  create: () => new MecklenbeckChess(),
 });
 
 registerVariant({

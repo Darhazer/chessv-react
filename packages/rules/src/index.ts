@@ -18,6 +18,11 @@ export { BerolinaEnPassantRule } from './berolinaEnPassantRule.js';
 export { CastlingRule } from './castlingRule.js';
 export { FlexibleCastlingRule } from './flexibleCastlingRule.js';
 export { CheckmateRule } from './checkmateRule.js';
+export { ColorboundPromotionRestrictionRule } from './colorboundPromotionRestrictionRule.js';
+export {
+  ComplexPromotionRule,
+  type OptionalPromotionFromAndToLocationDelegate,
+} from './complexPromotionRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
 export { KingsLeapRule } from './kingsLeapRule.js';
