@@ -10,6 +10,7 @@ import {
   exportPgn,
   type Game,
   importPgn,
+  Movement,
   MoveType,
   type MoveInfo,
   moveTypeHasProperty,
@@ -84,6 +85,8 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const [pgnMode, setPgnMode] = useState<'export' | 'import' | null>(null);
   const [pgnText, setPgnText] = useState('');
   const [pgnError, setPgnError] = useState<string | null>(null);
+  /** When non-null, we are reviewing the position after move `reviewCursor`. */
+  const [reviewCursor, setReviewCursor] = useState<number | null>(null);
 
   const engine = useAiEngine(variantName);
   const game = gameRef.current;
@@ -103,6 +106,7 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
 
   // Drive the AI: whenever it is the engine's turn, request a move.
   useEffect(() => {
+    if (reviewCursor !== null) return;
     if (aiPlayer === null || !engine.ready || aiBusy.current) return;
     if (!game.result.isNone || game.currentSide !== aiPlayer) return;
 
@@ -120,6 +124,7 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   }, [version, aiPlayer, aiDepth, engine.ready]);
 
   const handleSquareClick = (square: number): void => {
+    if (reviewCursor !== null) return;
     if (!game.result.isNone || pendingPromotion !== null) return;
     // The human cannot move for the side the AI controls.
     if (aiPlayer !== null && (game.currentSide === aiPlayer || thinking)) return;
@@ -158,11 +163,12 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
     setHistory([]);
     setPendingPromotion(null);
     setThinking(false);
+    setReviewCursor(null);
     forceUpdate();
   };
 
   const handleUndo = (): void => {
-    if (thinking || history.length === 0) return;
+    if (thinking || history.length === 0 || reviewCursor !== null) return;
     const undoOne = (): void => {
       game.undoMove();
       moveHashes.current.pop();
@@ -173,6 +179,23 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
     if (aiPlayer !== null && moveHashes.current.length > 0 && game.currentSide === aiPlayer) {
       undoOne();
     }
+    setSelectedSquare(null);
+    setPendingPromotion(null);
+    forceUpdate();
+  };
+
+  /**
+   * Jump the board to the position after the given move index, or null for the
+   * live tip. Re-uses the saved move-hash log to undo / redo without rebuilding.
+   */
+  const jumpTo = (cursor: number | null): void => {
+    const targetMoveCount = cursor === null ? moveHashes.current.length : cursor + 1;
+    while (game.gameMoveNumber > targetMoveCount) game.undoMove();
+    while (game.gameMoveNumber < targetMoveCount) {
+      const next = moveHashes.current[game.gameMoveNumber]!;
+      game.makeMovement(Movement.fromHash(next), false);
+    }
+    setReviewCursor(cursor);
     setSelectedSquare(null);
     setPendingPromotion(null);
     forceUpdate();
@@ -287,9 +310,18 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
           <button type="button" onClick={openExportPgn} disabled={history.length === 0}>
             Export PGN
           </button>
-          <button type="button" onClick={openImportPgn} disabled={thinking}>
+          <button
+            type="button"
+            onClick={openImportPgn}
+            disabled={thinking || reviewCursor !== null}
+          >
             Import PGN
           </button>
+          {reviewCursor !== null && (
+            <button type="button" onClick={() => jumpTo(null)}>
+              Return to live
+            </button>
+          )}
         </div>
 
         <div className="ai-controls">
@@ -334,11 +366,23 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
         )}
 
         <ol className="move-list">
-          {history.map((text, index) => (
-            // The move list is append-only; index is a stable key here.
-            // eslint-disable-next-line react/no-array-index-key
-            <li key={index}>{text}</li>
-          ))}
+          {history.map((text, index) => {
+            const isCurrent =
+              reviewCursor === null ? index === history.length - 1 : index === reviewCursor;
+            return (
+              // The move list is append-only; index is a stable key here.
+              // eslint-disable-next-line react/no-array-index-key
+              <li key={index} className={isCurrent ? 'move-current' : undefined}>
+                <button
+                  type="button"
+                  className="move-item"
+                  onClick={() => jumpTo(index === history.length - 1 ? null : index)}
+                >
+                  {text}
+                </button>
+              </li>
+            );
+          })}
         </ol>
       </aside>
 
