@@ -1006,10 +1006,30 @@ export class Game extends ExObject {
     return 0;
   }
 
+  /**
+   * Memoised Zobrist hash of the current position. `getPositionHashCode` is
+   * called several times per search frame at the same (ply, board.hashCode)
+   * — once to probe the TT and again to store the result — and each call
+   * iterates every rule and XORs a fresh bigint. The cache holds the most
+   * recent result keyed by (ply, board.hashCode). Both keys are needed:
+   * the rules' contribution depends on ply, and the board's own hash on
+   * the piece arrangement.
+   */
+  private cachedHashPly = -1;
+  private cachedHashBoardKey = 0n;
+  private cachedHashValue = 0n;
+
   /** The Zobrist hash of the current position at the given ply. */
   getPositionHashCode(ply: number): bigint {
-    let hash = this.board.hashCode;
+    const boardHash = this.board.hashCode;
+    if (ply === this.cachedHashPly && boardHash === this.cachedHashBoardKey) {
+      return this.cachedHashValue;
+    }
+    let hash = boardHash;
     for (const rule of this.rules) hash ^= rule.getPositionHashCode(ply);
+    this.cachedHashPly = ply;
+    this.cachedHashBoardKey = boardHash;
+    this.cachedHashValue = hash;
     return hash;
   }
 
