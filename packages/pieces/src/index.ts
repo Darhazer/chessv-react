@@ -57,4 +57,5 @@ export {
   Wildebeest,
   Wizard,
 } from './fairy.js';
+export { BentHero, BentShaman, Falcon, SlidingGeneral } from './multiPath.js';
 export { Cannon, Vao } from './xiangqi.js';

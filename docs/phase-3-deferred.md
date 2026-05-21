@@ -55,20 +55,19 @@ is a soft prerequisite for some of them.
 **Layered promotion rules — done.**
 - `packages/rules/src/complexPromotionRule.ts` — `ComplexPromotionRule`
   bundles per-piece-type promotion capabilities (free-choice + replacement
-  targets, with an optional from/to condition). Unlocks Mecklenbeck Chess
-  (8×8) and is a prerequisite for Lemurian Shatranj.
+  targets, with an optional from/to condition).
 - `packages/rules/src/colorboundPromotionRestrictionRule.ts` — rejects a
   promotion / replacement that would leave the player with two pieces of
-  the same colour-bound type on the same slice. Ready for Lemurian when
-  its multi-path piece types (BentShaman, BentHero, SlidingGeneral) land.
+  the same colour-bound type on the same slice.
 
-**Unlocked:** Mecklenbeck Chess (8×8).
+**Unlocked:** Mecklenbeck Chess and Lemurian Shatranj (both 8×8). The
+multi-path piece machinery Lemurian needed (`BentShaman`, `BentHero`,
+`SlidingGeneral`) lives in `packages/pieces/src/multiPath.ts` alongside
+`Falcon`.
 
 **Still deferred:**
 
-- Lemurian Shatranj (8×8) — blocked on the multi-path piece machinery
-  (BentShaman, BentHero, SlidingGeneral, all in `Pieces/MultiPath.cs`).
-- Eurasian Chess (10×10) — also needs the xiangqi `KingFacingRule` and a
+- Eurasian Chess (10×10) — needs the xiangqi `KingFacingRule` and a
   `PieceLocationRestrictionRule` (palace).
 - 12×12: Gross Chess, Chess And A Half — both need bespoke rules.
 - 9×10: Yang Qi — also needs the custom king-swap rule.
@@ -172,7 +171,7 @@ the Phase-3 batches.
 | Odin's Rune Chess (10x10) | `Pieces/OdinsRune/`, `Rules/OdinsRune/` | Custom move generators (adjacency-based). |
 | Odyssey (12x12) | `Rules/Odyssey/` | Assassin trade-restriction rule; multi-char piece notation. |
 | Symmetric Chess (9x8) | `Rules/Symmetric/BishopConversionRule.cs` | ~550 lines of bishop-conversion privilege bookkeeping. |
-| Falcon Chess (10x8) | `Pieces/MultiPath.cs` | Multi-path piece needs a custom piece-type subclass. |
+| ✅ Falcon Chess (10×8) | `Pieces/MultiPath.cs` | Multi-path piece; the engine's `MovePathInfo` machinery did the work. Done. |
 | Yang Qi (9x10) | `Rules/YangQi/` | Custom king-swap rule (+ Replacement promotion). |
 | Courier Chess Moderno (12x8) | `Rules/ExtraMovesForUnmovedPieceRule.cs` | Unmoved-piece extra move + a custom `"3-3"` castling style. |
 | Chess And A Half (12x12) | `Rules/OptionalCaptureByOvertakeRule.cs` | Multi-target capture + complex promotion. |

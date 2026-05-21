@@ -13,6 +13,7 @@ import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
 import { ChessWithPockets } from './v8x8/chessWithPockets.js';
 import { CylindricalChess } from './v8x8/cylindricalChess.js';
+import { LemurianShatranj } from './v8x8/lemurianShatranj.js';
 import { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
 import { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
@@ -45,6 +46,7 @@ import {
 } from './v10x8/capablancaChess.js';
 import { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
 import { GreatShatranj, GreatShatranjR } from './v10x8/greatShatranj.js';
+import { FalconChess } from './v10x8/falconChess.js';
 import { JanusChess } from './v10x8/janusChess.js';
 import { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
 import { NewChancellorChess } from './v10x8/newChancellorChess.js';
@@ -107,6 +109,7 @@ export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { ChessWithPockets } from './v8x8/chessWithPockets.js';
 export { CylindricalChess } from './v8x8/cylindricalChess.js';
+export { LemurianShatranj } from './v8x8/lemurianShatranj.js';
 export { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
 export { DoublemoveChess, MarseillaisChess } from './v8x8/multiMoveChess.js';
@@ -127,6 +130,7 @@ export {
 } from './v10x8/capablancaChess.js';
 export { CapablancaShatranj } from './v10x8/capablancaShatranj.js';
 export { GreatShatranj, GreatShatranjR } from './v10x8/greatShatranj.js';
+export { FalconChess } from './v10x8/falconChess.js';
 export { JanusChess } from './v10x8/janusChess.js';
 export { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
 export { NewChancellorChess } from './v10x8/newChancellorChess.js';
@@ -431,6 +435,20 @@ registerVariant({
     'Standard chess with an extended promotion zone: pawns may promote on the ' +
     '6th or 7th rank, and must promote on the 8th.',
   create: () => new MecklenbeckChess(),
+});
+
+registerVariant({
+  name: 'Lemurian Shatranj',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Joe Joyce',
+  description:
+    'A Shatranj-themed 8 x 8 variant with four multi-path pieces (Sliding ' +
+    'General, Bent Shaman, Bent Hero, War Elephant); pawns must promote by ' +
+    'replacement into a captured piece type, subject to colour-binding constraints.',
+  create: () => new LemurianShatranj(),
 });
 
 registerVariant({
@@ -776,6 +794,20 @@ registerVariant({
   inventedBy: 'Werner Schöndorf',
   description: 'A 10 x 8 variant with two Januses (Archbishops) and long castling.',
   create: () => new JanusChess(),
+});
+
+registerVariant({
+  name: 'Falcon Chess',
+  files: 10,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '1992',
+  inventedBy: 'George Duke',
+  description:
+    'A 10 x 8 variant adding the Falcon — a multi-path leaper that completes a ' +
+    'three-step "knight-plus" jump if at least one of the three unit-step paths is clear.',
+  colorScheme: 'Surrealistic Summer',
+  create: () => new FalconChess(),
 });
 
 registerVariant({
