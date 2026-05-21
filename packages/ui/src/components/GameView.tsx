@@ -20,7 +20,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
 import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
-import { DEFAULT_PIECE_SET, PIECE_SETS } from '../pieceSets.js';
+import { DEFAULT_PIECE_SET, PIECE_SETS, pickPieceSet } from '../pieceSets.js';
 import { useAiEngine } from '../useAiEngine.js';
 import { useLocalStorage } from '../useLocalStorage.js';
 
@@ -97,10 +97,21 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const colorScheme =
     COLOR_SCHEMES.find((scheme) => scheme.name === colorSchemeName) ?? DEFAULT_SCHEME;
   const [pieceSetName, setPieceSetName] = useLocalStorage('pieceSet', DEFAULT_PIECE_SET);
-  const pieceSet = PIECE_SETS[pieceSetName] ?? null;
 
   const engine = useAiEngine(variantName);
   const game = gameRef.current;
+
+  // Auto-switch the rendered set if the user's preferred one is missing any of
+  // this variant's piece types (e.g. Omega Chess needs Wizard, which Standard
+  // doesn't ship). The stored preference is left alone so we revert to it on
+  // variants where it does cover everything.
+  const requiredPieces: string[][] = [];
+  for (let i = 0; i < game.nPieceTypes; i++) {
+    requiredPieces.push(game.getPieceType(i).imagePreferenceList);
+  }
+  const effectivePieceSetName = pickPieceSet(pieceSetName, requiredPieces);
+  const pieceSet = PIECE_SETS[effectivePieceSetName] ?? null;
+  const autoSwitched = effectivePieceSetName !== pieceSetName;
   const moves = legalMoves(game);
 
   /** The player number the AI controls, or null for hotseat. */
@@ -378,6 +389,14 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
                 </option>
               ))}
             </select>
+            {autoSwitched && (
+              <span
+                className="pieceset-auto-hint"
+                title={`${pieceSetName} is missing piece types this variant uses; rendering with ${effectivePieceSetName}.`}
+              >
+                {' '}(auto: {effectivePieceSetName})
+              </span>
+            )}
           </label>
         </div>
 

@@ -19,7 +19,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { type ColorScheme, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
-import type { PieceSetManifest } from '../pieceSets.js';
+import { type PieceSetManifest, resolvePieceImage } from '../pieceSets.js';
 import { getTexture } from '../textures.js';
 
 const SQUARE_SIZE = 64;
@@ -215,7 +215,10 @@ export function BoardView({
         )}
         {piece !== null &&
           (() => {
-            const entry = pieceSet?.pieces[piece.pieceType.internalName];
+            const entry =
+              pieceSet !== null
+                ? resolvePieceImage(pieceSet, piece.pieceType.imagePreferenceList)
+                : undefined;
             if (entry !== undefined) {
               const isDark = piece.player === 1;
               const href = isDark && entry.dark !== undefined ? entry.dark : entry.light;

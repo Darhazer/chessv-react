@@ -44,3 +44,51 @@ export const PIECE_SETS: Record<string, PieceSetManifest | null> = {
 };
 
 export const DEFAULT_PIECE_SET = 'Standard';
+
+/**
+ * Resolve a single piece type to its image entry in a set, walking the
+ * `imagePreferenceList` so subclasses like `DiamondPawn` (internal name
+ * "Diamond Pawn", display name "Pawn") inherit the parent's image when no
+ * dedicated one exists. Returns `undefined` if no name in the list matches.
+ */
+export function resolvePieceImage(
+  set: PieceSetManifest,
+  imagePreferenceList: readonly string[],
+): PieceImageEntry | undefined {
+  for (const name of imagePreferenceList) {
+    const entry = set.pieces[name];
+    if (entry !== undefined) return entry;
+  }
+  return undefined;
+}
+
+/**
+ * Choose the piece set to actually render with for a variant.
+ *
+ * Each entry of `requiredPieces` is one piece type's `imagePreferenceList`
+ * (most-preferred name first). A set "covers" a variant when every piece has
+ * at least one name present in the set.
+ *
+ * If the user's preferred bitmap set covers the variant, keep it. Otherwise
+ * pick the first set in {@link PIECE_SETS} that covers it. If nothing covers
+ * it, fall back to the preferred set — the BoardView's glyph fallback then
+ * fills the gaps.
+ *
+ * The "Unicode" pseudo-set (`null`) is respected — if the user explicitly chose
+ * glyphs we don't auto-upgrade to bitmaps behind their back.
+ */
+export function pickPieceSet(
+  preferredName: string,
+  requiredPieces: readonly (readonly string[])[],
+): string {
+  const preferred = PIECE_SETS[preferredName];
+  if (preferred === null) return preferredName;
+  if (preferred === undefined) return DEFAULT_PIECE_SET;
+  const covers = (set: PieceSetManifest): boolean =>
+    requiredPieces.every((names) => resolvePieceImage(set, names) !== undefined);
+  if (covers(preferred)) return preferredName;
+  for (const [name, set] of Object.entries(PIECE_SETS)) {
+    if (set !== null && covers(set)) return name;
+  }
+  return preferredName;
+}
