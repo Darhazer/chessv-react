@@ -12,8 +12,8 @@ played in the browser.
 | 0 | Monorepo scaffold | done |
 | 1 | Core engine + Standard Chess playable | done |
 | 2 | AI engine (Web Worker) | done |
-| 3 | Variant catalog | done — 85 variants registered (see [phase-3-deferred](docs/phase-3-deferred.md)) |
-| 4 | Themes, PGN, polish | done (see [phase-4-deferred](docs/phase-4-deferred.md)) |
+| 3 | Variant catalog | done — 85 variants registered |
+| 4 | Themes, PGN, polish | done |
 | 5 | Hardening / parity testing | done |
 
 ### Variant coverage
