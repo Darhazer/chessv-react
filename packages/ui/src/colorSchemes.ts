@@ -1,8 +1,12 @@
 /**
- * Board colour schemes. The four originals (Classic Wood, Slate Blue, Sea
+ * Board colour schemes. The five originals (Classic Wood, Slate Blue, Sea
  * Green, Cinnamon, High Contrast) are hand-tuned for the web port; the rest
  * are ported from `ChessV.GUI/ColorSchemeLibrary.cs` via
  * `assets/colorSchemes.json` and derived to the `ColorScheme` shape below.
+ *
+ * Texture-backed schemes (Luna Decorabat, Marmoor Quadraut, …) name a
+ * texture from `textures.json`; BoardView renders the texture as an SVG
+ * `<pattern>` instead of the flat `light`/`dark` colour.
  */
 
 import library from './assets/colorSchemes.json' with { type: 'json' };
@@ -20,6 +24,10 @@ export interface ColorScheme {
   target: string;
   /** Last-move highlight. */
   lastMove: string;
+  /** Optional texture name for the light squares. */
+  lightTexture?: string;
+  /** Optional texture name for the dark squares. */
+  darkTexture?: string;
 }
 
 /** Hex `#RRGGBB` → `rgba(r,g,b,a)`. */
@@ -35,11 +43,13 @@ interface RawScheme {
   light: string;
   dark: string;
   accent: string;
+  lightTexture?: string;
+  darkTexture?: string;
 }
 
 /** Derive a full `ColorScheme` from the raw light/dark/accent palette. */
 function expand(raw: RawScheme): ColorScheme {
-  return {
+  const scheme: ColorScheme = {
     name: raw.name,
     light: raw.light,
     dark: raw.dark,
@@ -53,6 +63,9 @@ function expand(raw: RawScheme): ColorScheme {
     // scheme — it stays distinct from the selection colour.
     lastMove: 'rgba(255, 220, 90, 0.42)',
   };
+  if (raw.lightTexture !== undefined) scheme.lightTexture = raw.lightTexture;
+  if (raw.darkTexture !== undefined) scheme.darkTexture = raw.darkTexture;
+  return scheme;
 }
 
 /**

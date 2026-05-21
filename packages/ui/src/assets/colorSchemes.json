@@ -1,5 +1,5 @@
 {
-  "_comment": "Ported from ChessV.GUI/ColorSchemeLibrary.cs. Each entry keeps ChessV's SquareColor1 (light) and SquareColor2 (dark); `accent` is the source HighlightColor used to derive selection / move overlays. Texture-based schemes (Luna Decorabat, Marmoor Quadraut, Lemon Cappuccino, Rosaliya, Brushed Steel, Norwegian Wood) are omitted until the texture pipeline lands — see docs/phase-4-deferred.md §3.",
+  "_comment": "Ported from ChessV.GUI/ColorSchemeLibrary.cs. Each entry keeps ChessV's SquareColor1 (light) and SquareColor2 (dark); `accent` is the source HighlightColor used to derive selection / move overlays. The `lightTexture` / `darkTexture` fields name a texture from `textures.json` (see tools/convert-assets.ts); when present, BoardView renders that texture as a pattern instead of the flat colour.",
   "schemes": [
     { "name": "Cape Cod",            "light": "#FFFFD6", "dark": "#5D7E7E", "accent": "#400000" },
     { "name": "Surrealistic Summer", "light": "#CCCC11", "dark": "#339933", "accent": "#111199" },
@@ -15,6 +15,18 @@
     { "name": "Brown Bear Brawl",    "light": "#FFDEAD", "dark": "#CD853F", "accent": "#8B4513" },
     { "name": "Cavalier Komi",       "light": "#FFFFE1", "dark": "#008000", "accent": "#000000" },
     { "name": "Baby Blues",          "light": "#FFFFFF", "dark": "#A4C8F0", "accent": "#82B4EA" },
-    { "name": "Golden Goose Egg",    "light": "#FFEEBB", "dark": "#886600", "accent": "#995500" }
+    { "name": "Golden Goose Egg",    "light": "#FFEEBB", "dark": "#886600", "accent": "#995500" },
+    { "name": "Luna Decorabat",      "light": "#FFFFCC", "dark": "#AACEBD", "accent": "#33CC00",
+      "lightTexture": "White Marble", "darkTexture": "Dark Marble" },
+    { "name": "Marmoor Quadraut",    "light": "#FFFFCC", "dark": "#FFFFB6", "accent": "#FFFF00",
+      "lightTexture": "Orange Marble", "darkTexture": "Wine Marble" },
+    { "name": "Lemon Cappuccino",    "light": "#F1F0C5", "dark": "#BFBBAA", "accent": "#000000",
+      "lightTexture": "Pink Marble", "darkTexture": "Light Marble" },
+    { "name": "Rosaliya",            "light": "#FFFFFF", "dark": "#B18384", "accent": "#000000",
+      "lightTexture": "Light Marble", "darkTexture": "Pink Marble" },
+    { "name": "Brushed Steel",       "light": "#FFFFFF", "dark": "#000000", "accent": "#804646",
+      "lightTexture": "Light Metal", "darkTexture": "Dark Metal" },
+    { "name": "Norwegian Wood",      "light": "#FFFFFF", "dark": "#E68D4D", "accent": "#AA2828",
+      "lightTexture": "Light Wood", "darkTexture": "Dark Wood" }
   ]
 }

@@ -17,7 +17,15 @@
  * Run with `pnpm convert-assets`.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 
@@ -25,7 +33,9 @@ import sharp from 'sharp';
 
 const SOURCE_ROOT = join(homedir(), 'Downloads', 'ChessV2.2-Source');
 const PIECE_SETS_DIR = join(SOURCE_ROOT, 'Graphics', 'Piece Sets');
+const TEXTURES_DIR = join(SOURCE_ROOT, 'Graphics', 'Textures');
 const OUT_ROOT = join(process.cwd(), 'packages', 'ui', 'public', 'assets', 'pieces');
+const TEXTURE_OUT_ROOT = join(process.cwd(), 'packages', 'ui', 'public', 'assets', 'textures');
 const MANIFEST_ROOT = join(process.cwd(), 'packages', 'ui', 'src', 'assets');
 
 /** A piece's source file stem → engine `PieceType.internalName`. */
@@ -283,6 +293,56 @@ async function convertSet(config: SetConfig): Promise<Manifest | null> {
   return { set: config.name, imageSize, mode: config.mode, pieces };
 }
 
+/** Manifest entry for one board-square texture. */
+interface TextureManifest {
+  name: string;
+  /** Hex `#rrggbb` colour to use when the texture image fails to load. */
+  substituteColor: string;
+  /** URL of the 64×64 tile rendered as the square's pattern. */
+  imageUrl: string;
+}
+
+/**
+ * `Color=@FFRRGGBB` or `@RRGGBB` → `#rrggbb`. The leading alpha (if any) is
+ * dropped — the board pattern is always opaque.
+ */
+function parseTextureColor(propertiesText: string): string {
+  const match = /Color=@\s*([0-9A-Fa-f]+)/.exec(propertiesText);
+  if (match === null) throw new Error('Texture properties.txt has no Color= line');
+  let hex = match[1]!;
+  if (hex.length === 8) hex = hex.slice(2); // strip alpha
+  if (hex.length !== 6) throw new Error(`Unexpected colour length in texture: ${hex}`);
+  return '#' + hex.toLowerCase();
+}
+
+async function convertTextures(): Promise<TextureManifest[] | null> {
+  if (!existsSync(TEXTURES_DIR)) {
+    console.warn(`Textures source not found at ${TEXTURES_DIR}`);
+    return null;
+  }
+  mkdirSync(TEXTURE_OUT_ROOT, { recursive: true });
+  const folders = readdirSync(TEXTURES_DIR).sort();
+  const manifest: TextureManifest[] = [];
+  for (const folder of folders) {
+    const dir = join(TEXTURES_DIR, folder);
+    const propsPath = join(dir, 'properties.txt');
+    const imagePath = join(dir, 'image1.png');
+    if (!existsSync(propsPath) || !existsSync(imagePath)) continue;
+    const substituteColor = parseTextureColor(readFileSync(propsPath, 'utf8'));
+    // Slugify the folder name for the filename / URL.
+    const slug = folder.replace(/[^A-Za-z0-9]+/g, '');
+    const outPath = join(TEXTURE_OUT_ROOT, `${slug}.png`);
+    copyFileSync(imagePath, outPath);
+    manifest.push({
+      name: folder,
+      substituteColor,
+      imageUrl: `/assets/textures/${slug}.png`,
+    });
+  }
+  console.log(`Converted ${manifest.length} textures`);
+  return manifest;
+}
+
 async function main(): Promise<void> {
   if (!existsSync(PIECE_SETS_DIR)) {
     console.error(`Source not found: ${PIECE_SETS_DIR}`);
@@ -296,6 +356,13 @@ async function main(): Promise<void> {
     const manifestPath = join(MANIFEST_ROOT, `pieceSet-${set.name}.json`);
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
     console.log(`Wrote manifest: ${manifestPath}`);
+  }
+
+  const textures = await convertTextures();
+  if (textures !== null) {
+    const path = join(MANIFEST_ROOT, 'textures.json');
+    writeFileSync(path, JSON.stringify(textures, null, 2) + '\n');
+    console.log(`Wrote manifest: ${path}`);
   }
 }
 

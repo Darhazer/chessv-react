@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from 'react';
 import { type ColorScheme, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import type { PieceSetManifest } from '../pieceSets.js';
+import { getTexture } from '../textures.js';
 
 const SQUARE_SIZE = 64;
 /** Visual gap between the two halves of an Alice-style layout, in pixels. */
@@ -84,6 +85,16 @@ export function BoardView({
   const board = game.board;
   const { numFiles, numRanks } = board;
   const lastMoveSquares = new Set(lastMove ?? []);
+
+  // Texture resolution: when the scheme names a texture, prefer the image
+  // (via an SVG <pattern>) but fall back to the scheme's flat colour if the
+  // texture isn't found.
+  const lightTexture =
+    colorScheme.lightTexture !== undefined ? getTexture(colorScheme.lightTexture) : undefined;
+  const darkTexture =
+    colorScheme.darkTexture !== undefined ? getTexture(colorScheme.darkTexture) : undefined;
+  const lightFill = lightTexture !== undefined ? 'url(#chessv-tex-light)' : LIGHT;
+  const darkFill = darkTexture !== undefined ? 'url(#chessv-tex-dark)' : DARK;
 
   // Geometry detection.
   const twoBoard = board instanceof TwoBoards ? board : null;
@@ -192,7 +203,13 @@ export function BoardView({
         onKeyDown={(event) => handleKeyDown(event, square)}
         style={{ cursor: 'pointer', outline: 'none' }}
       >
-        <rect x={x} y={y} width={SQUARE_SIZE} height={SQUARE_SIZE} fill={isLight ? LIGHT : DARK} />
+        <rect
+          x={x}
+          y={y}
+          width={SQUARE_SIZE}
+          height={SQUARE_SIZE}
+          fill={isLight ? lightFill : darkFill}
+        />
         {overlay !== null && (
           <rect x={x} y={y} width={SQUARE_SIZE} height={SQUARE_SIZE} fill={overlay} />
         )}
@@ -317,6 +334,35 @@ export function BoardView({
                      0 0 0 1 0"
           />
         </filter>
+        {/*
+         * Texture patterns for textured colour schemes. Each pattern is a
+         * single `SQUARE_SIZE`-wide tile that fills exactly one cell, so the
+         * texture lines up with the grid (instead of repeating mid-square).
+         * A `<rect>` with the scheme's flat colour sits behind the image as
+         * a fallback while the PNG loads.
+         */}
+        {lightTexture !== undefined && (
+          <pattern
+            id="chessv-tex-light"
+            patternUnits="userSpaceOnUse"
+            width={SQUARE_SIZE}
+            height={SQUARE_SIZE}
+          >
+            <rect width={SQUARE_SIZE} height={SQUARE_SIZE} fill={lightTexture.substituteColor} />
+            <image href={lightTexture.imageUrl} width={SQUARE_SIZE} height={SQUARE_SIZE} />
+          </pattern>
+        )}
+        {darkTexture !== undefined && (
+          <pattern
+            id="chessv-tex-dark"
+            patternUnits="userSpaceOnUse"
+            width={SQUARE_SIZE}
+            height={SQUARE_SIZE}
+          >
+            <rect width={SQUARE_SIZE} height={SQUARE_SIZE} fill={darkTexture.substituteColor} />
+            <image href={darkTexture.imageUrl} width={SQUARE_SIZE} height={SQUARE_SIZE} />
+          </pattern>
+        )}
       </defs>
       {cells}
     </svg>

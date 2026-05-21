@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Blue Marble",
+    "substituteColor": "#88a5bf",
+    "imageUrl": "/assets/textures/BlueMarble.png"
+  },
+  {
+    "name": "Brownish Green Marble",
+    "substituteColor": "#938b7e",
+    "imageUrl": "/assets/textures/BrownishGreenMarble.png"
+  },
+  {
+    "name": "Cloudy Marble",
+    "substituteColor": "#b0adb3",
+    "imageUrl": "/assets/textures/CloudyMarble.png"
+  },
+  {
+    "name": "Creamy Clouds",
+    "substituteColor": "#e7c1a0",
+    "imageUrl": "/assets/textures/CreamyClouds.png"
+  },
+  {
+    "name": "Dark Marble",
+    "substituteColor": "#232c33",
+    "imageUrl": "/assets/textures/DarkMarble.png"
+  },
+  {
+    "name": "Dark Metal",
+    "substituteColor": "#aaaaaa",
+    "imageUrl": "/assets/textures/DarkMetal.png"
+  },
+  {
+    "name": "Dark Wood",
+    "substituteColor": "#604020",
+    "imageUrl": "/assets/textures/DarkWood.png"
+  },
+  {
+    "name": "Deep Purple Marble",
+    "substituteColor": "#86646e",
+    "imageUrl": "/assets/textures/DeepPurpleMarble.png"
+  },
+  {
+    "name": "Gray Marble",
+    "substituteColor": "#a5b5b4",
+    "imageUrl": "/assets/textures/GrayMarble.png"
+  },
+  {
+    "name": "Greenish Marble",
+    "substituteColor": "#c8dcc8",
+    "imageUrl": "/assets/textures/GreenishMarble.png"
+  },
+  {
+    "name": "Light Marble",
+    "substituteColor": "#ebe8d7",
+    "imageUrl": "/assets/textures/LightMarble.png"
+  },
+  {
+    "name": "Light Metal",
+    "substituteColor": "#cccccc",
+    "imageUrl": "/assets/textures/LightMetal.png"
+  },
+  {
+    "name": "Light Wood",
+    "substituteColor": "#ffddbb",
+    "imageUrl": "/assets/textures/LightWood.png"
+  },
+  {
+    "name": "Orange Marble",
+    "substituteColor": "#d5b296",
+    "imageUrl": "/assets/textures/OrangeMarble.png"
+  },
+  {
+    "name": "Pink Marble",
+    "substituteColor": "#bcaea9",
+    "imageUrl": "/assets/textures/PinkMarble.png"
+  },
+  {
+    "name": "Rose Marble",
+    "substituteColor": "#d695ad",
+    "imageUrl": "/assets/textures/RoseMarble.png"
+  },
+  {
+    "name": "Rusted Metal",
+    "substituteColor": "#f5b74e",
+    "imageUrl": "/assets/textures/RustedMetal.png"
+  },
+  {
+    "name": "Smoke",
+    "substituteColor": "#887b84",
+    "imageUrl": "/assets/textures/Smoke.png"
+  },
+  {
+    "name": "Stone",
+    "substituteColor": "#a5a095",
+    "imageUrl": "/assets/textures/Stone.png"
+  },
+  {
+    "name": "White Marble",
+    "substituteColor": "#f3ede9",
+    "imageUrl": "/assets/textures/WhiteMarble.png"
+  },
+  {
+    "name": "Wine Marble",
+    "substituteColor": "#64232d",
+    "imageUrl": "/assets/textures/WineMarble.png"
+  }
+]
