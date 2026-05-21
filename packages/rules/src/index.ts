@@ -24,18 +24,22 @@ export {
   ComplexPromotionRule,
   type OptionalPromotionFromAndToLocationDelegate,
 } from './complexPromotionRule.js';
+export { DuplexChessMoveCompletionRule } from './duplexChessMoveCompletionRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
 export { ExtraMovesForUnmovedPieceRule } from './extraMovesForUnmovedPieceRule.js';
+export { GrossChessPromotionRule } from './grossChessPromotionRule.js';
 export { KingFacingRule } from './kingFacingRule.js';
 export { KingsFlightRule } from './kingsFlightRule.js';
 export { KingsLeapRule } from './kingsLeapRule.js';
+export { LocationVictoryConditionRule } from './locationVictoryConditionRule.js';
 export { Move50Rule } from './move50Rule.js';
 export { PieceLocationRestrictionRule } from './pieceLocationRestrictionRule.js';
 export {
   DoubleMoveCompletionRule,
   MarseillaisMoveCompletionRule,
 } from './multiMoveCompletionRules.js';
+export { OptionalCaptureByOvertakeRule } from './optionalCaptureByOvertakeRule.js';
 export { PawnSwapRule } from './pawnSwapRule.js';
 export { PocketDropRule } from './pocketDropRule.js';
 export {

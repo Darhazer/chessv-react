@@ -13,6 +13,7 @@ import { BerolinaChess } from './v8x8/berolinaChess.js';
 import { Chess } from './v8x8/chess.js';
 import { ChessWithPockets } from './v8x8/chessWithPockets.js';
 import { CylindricalChess } from './v8x8/cylindricalChess.js';
+import { DuplexChess } from './v8x8/duplexChess.js';
 import { LemurianShatranj } from './v8x8/lemurianShatranj.js';
 import { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 import { Chess480, FischerRandomChess } from './v8x8/fischerRandomChess.js';
@@ -62,7 +63,9 @@ import { CourierChess } from './v12x8/courierChess.js';
 import { CourierChessModerno } from './v12x8/courierChessModerno.js';
 import { KingsCourt } from './v12x8/kingsCourt.js';
 import { JanusKamilChess } from './v12x10/janusKamilChess.js';
+import { ChessAndAHalf } from './v12x12/chessAndAHalf.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
+import { GrossChess } from './v12x12/grossChess.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
@@ -116,6 +119,7 @@ export { ModernShatranj, Shatranj } from './v8x8/shatranj.js';
 export { ShatranjKamil64 } from './v8x8/shatranjKamil64.js';
 export { ChessWithPockets } from './v8x8/chessWithPockets.js';
 export { CylindricalChess } from './v8x8/cylindricalChess.js';
+export { DuplexChess } from './v8x8/duplexChess.js';
 export { LemurianShatranj } from './v8x8/lemurianShatranj.js';
 export { MecklenbeckChess } from './v8x8/mecklenbeckChess.js';
 export { Chess480, FischerRandomChess, chess960BackRank } from './v8x8/fischerRandomChess.js';
@@ -153,7 +157,9 @@ export { CourierChess } from './v12x8/courierChess.js';
 export { CourierChessModerno } from './v12x8/courierChessModerno.js';
 export { KingsCourt } from './v12x8/kingsCourt.js';
 export { JanusKamilChess } from './v12x10/janusKamilChess.js';
+export { ChessAndAHalf } from './v12x12/chessAndAHalf.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
+export { GrossChess } from './v12x12/grossChess.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
@@ -423,6 +429,20 @@ registerVariant({
     'Both sides play two moves per turn (white opens with one). The king is a ' +
     'normal piece — there is no check; you win by capturing it.',
   create: () => new DoublemoveChess(),
+});
+
+registerVariant({
+  name: 'Duplex Chess',
+  files: 8,
+  ranks: 8,
+  tags: ['Chess Variant', 'Multi-Move'],
+  invented: '2018',
+  inventedBy: 'Greg Strong',
+  description:
+    'A modest 8 x 8 double-move variant with short-range pieces only. Three ' +
+    'victory conditions: capture the king, capture the last pawn, or move a ' +
+    'king to the back rank.',
+  create: () => new DuplexChess(),
 });
 
 registerVariant({
@@ -1084,6 +1104,35 @@ registerVariant({
   description: 'Standard chess pieces on a 12 x 12 board with a back rank on rank 3.',
   colorScheme: 'Baby Blues',
   create: () => new ChessOnA12x12Board(),
+});
+
+registerVariant({
+  name: 'Gross Chess',
+  files: 12,
+  ranks: 12,
+  tags: ['Chess Variant'],
+  invented: '2009',
+  inventedBy: 'Fergus Duniho',
+  description:
+    'A 12 x 12 super-variant with two ranks of pieces per side (Marshall, ' +
+    'Archbishop, Vao, Wizard, Cannon, Champion plus the standard set). ' +
+    'Pawns get a triple-step from rank 3 and the promotion zone restricts ' +
+    'the strongest pieces to the very back rank.',
+  colorScheme: 'Surrealistic Summer',
+  create: () => new GrossChess(),
+});
+
+registerVariant({
+  name: 'Chess and a Half',
+  files: 12,
+  ranks: 12,
+  tags: ['Chess Variant'],
+  invented: '2017',
+  inventedBy: 'Nicolino Will',
+  description:
+    'A 12 x 12 variant with Guards, Cats (capture-by-overtake), Star Cats, ' +
+    'Speedy Knights and Eques Rex; pawns can step sideways past the half-way line.',
+  create: () => new ChessAndAHalf(),
 });
 
 // *** 16x8 VARIANTS *** //

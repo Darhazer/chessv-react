@@ -34,6 +34,7 @@ export {
   DiamondPawn,
   DragonHorse,
   DragonKing,
+  ElephantFerz,
   FreePadwar,
   General,
   GoldGeneral,

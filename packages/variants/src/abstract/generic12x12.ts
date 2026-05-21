@@ -71,17 +71,6 @@ export abstract class Generic12x12 extends Generic__x12 {
       return; // a non-castling choice
     }
 
-    // Skip Flexible / Close-Rook Flexible / 2R Flexible / 2R Close-Rook Flexible —
-    // these need the FlexibleCastlingRule (not yet ported).
-    if (
-      value === 'Flexible' ||
-      value === 'Close-Rook Flexible' ||
-      value === '2R Flexible' ||
-      value === '2R Close-Rook Flexible'
-    ) {
-      return;
-    }
-
     // Find the king's start squares.
     const whiteKing = new GenericPiece(0, this.castlingType!);
     const blackKing = new GenericPiece(1, this.castlingType!);
@@ -100,6 +89,48 @@ export abstract class Generic12x12 extends Generic__x12 {
     }
     if (whiteKingSquare === null || blackKingSquare === null) {
       throw new Error('Cannot enable castling — King does not start on a supported square');
+    }
+
+    // Flexible variants use the FlexibleCastlingRule: the king slides
+    // two or more squares toward the partner piece, which jumps to the
+    // king's other side. The partner sits on file a/l (Flexible) or
+    // b/k (Close-Rook Flexible).
+    if (
+      value === 'Flexible' ||
+      value === 'Close-Rook Flexible' ||
+      value === '2R Flexible' ||
+      value === '2R Close-Rook Flexible'
+    ) {
+      const closeRookFlex = value.includes('Close-Rook');
+      const r1 = value.startsWith('2R') ? '2' : '1';
+      const r2 = value.startsWith('2R') ? '11' : '12';
+      const partnerLeft = closeRookFlex ? 'b' : 'a';
+      const partnerRight = closeRookFlex ? 'k' : 'l';
+      const offsetCh = (ch: string, n: number): string =>
+        String.fromCharCode(ch.charCodeAt(0) + n);
+      this.addFlexibleCastlingRule();
+      const move = (player: 0 | 1, kingSquare: string, rank: string): void => {
+        const kingChar = kingSquare[0]!;
+        const priv = (c: string): string => (player === 0 ? c.toUpperCase() : c.toLowerCase());
+        // The king's minimum slide is two squares.
+        this.flexibleCastlingMove(
+          player,
+          kingSquare,
+          `${offsetCh(kingChar, 2)}${rank}`,
+          `${partnerRight}${rank}`,
+          priv(partnerRight),
+        );
+        this.flexibleCastlingMove(
+          player,
+          kingSquare,
+          `${offsetCh(kingChar, -2)}${rank}`,
+          `${partnerLeft}${rank}`,
+          priv(partnerLeft),
+        );
+      };
+      move(0, whiteKingSquare, r1);
+      move(1, blackKingSquare, r2);
+      return;
     }
 
     const offset = (ch: string, n: number): string => String.fromCharCode(ch.charCodeAt(0) + n);

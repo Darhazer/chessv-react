@@ -921,3 +921,22 @@ export class SquirrelGeneral extends PieceType {
     King.addMoves(type);
   }
 }
+
+/** Elephant + Ferz — a 1-or-2-step diagonal mover. */
+export class ElephantFerz extends PieceType {
+  constructor(
+    name: string,
+    notation: string,
+    midgameValue: number,
+    endgameValue: number,
+    preferredImageName: string | null = null,
+  ) {
+    super('Elephant Ferz', name, notation, midgameValue, endgameValue, preferredImageName);
+    ElephantFerz.addMoves(this);
+  }
+
+  static addMoves(type: PieceType): void {
+    Elephant.addMoves(type);
+    Ferz.addMoves(type);
+  }
+}
