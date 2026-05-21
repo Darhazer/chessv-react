@@ -9,22 +9,54 @@
  *  Ported from ChessV.Base/Hashtable.cs
  ***************************************************************************/
 
-import { HashType, TTHashEntry } from './ttHashEntry.js';
+import { HashType } from './ttHashEntry.js';
 import { Movement } from './movement.js';
 import { MoveType } from './basics.js';
 
 /** Approximate bytes per entry, used only to size the table from a MB budget. */
-const ENTRY_SIZE_BYTES = 24;
+const ENTRY_SIZE_BYTES = 16;
+
+const GENERATION_MASK = 0x1ffn;
+const HASH_MASK = ((1n << 64n) - 1n) ^ GENERATION_MASK;
 
 /**
- * The transposition table: a fixed array of {@link TTHashEntry} slots grouped
- * into 4-slot clusters. Stores search results keyed by Zobrist hash so
+ * A read-only view over one transposition-table slot. The same object is
+ * returned from every successful {@link Hashtable.lookup}; the engine reads
+ * its fields immediately and never holds it across a second lookup, which
+ * lets the table avoid allocating per-call view objects.
+ */
+export interface TTHashEntryView {
+  readonly moveHash: number;
+  readonly type: HashType;
+  readonly depth: number;
+  readonly score: number;
+}
+
+/**
+ * The transposition table. Stores search results keyed by Zobrist hash so
  * transposed positions can be recognised without re-searching.
+ *
+ * Storage is three parallel typed arrays (hashes / packed data / move hashes)
+ * rather than an array of class instances — at a 128 MB budget that is
+ * millions of slots and the per-object header overhead would dominate.
+ * Slots are grouped into 4-slot clusters; the cluster start is derived from
+ * the low bits of the position hash.
  */
 export class Hashtable {
-  private tableData: TTHashEntry[] = [];
+  private hashes: BigUint64Array = new BigUint64Array(0);
+  /** Packed: `(score << 16) | (depth << 8) | type`. */
+  private data: Int32Array = new Int32Array(0);
+  private moves: Int32Array = new Int32Array(0);
   private size = 0;
   private generation = 0;
+
+  /** Re-used view returned by {@link lookup}; mutated in place per call. */
+  private readonly view: { moveHash: number; type: HashType; depth: number; score: number } = {
+    moveHash: 0,
+    type: HashType.NoHash,
+    depth: 0,
+    score: 0,
+  };
 
   /** Size the table for roughly `sizeInMB` megabytes (clamped to 16–4096). */
   setSize(sizeInMB: number): void {
@@ -37,13 +69,17 @@ export class Hashtable {
   }
 
   private allocate(arraySize: number): void {
-    this.tableData = Array.from({ length: arraySize }, () => new TTHashEntry());
+    this.hashes = new BigUint64Array(arraySize);
+    this.data = new Int32Array(arraySize);
+    this.moves = new Int32Array(arraySize);
     this.size = arraySize;
   }
 
   /** Empty every slot. */
   clear(): void {
-    for (const entry of this.tableData) entry.reset();
+    this.hashes.fill(0n);
+    this.data.fill(0);
+    this.moves.fill(0);
   }
 
   /** The cluster's starting index for a hash code. */
@@ -51,12 +87,25 @@ export class Hashtable {
     return Number(hashcode & BigInt(this.size - 1)) & 0xfffffffc;
   }
 
+  /** True if `slot` stores the position with the given hash. */
+  private slotMatches(slot: number, hashcode: bigint): boolean {
+    return (this.hashes[slot]! & HASH_MASK) === (hashcode & HASH_MASK);
+  }
+
   /** Find the entry for a position, or null if absent. */
-  lookup(hashcode: bigint): TTHashEntry | null {
+  lookup(hashcode: bigint): TTHashEntryView | null {
     const start = this.groupStart(hashcode);
     for (let slot = 0; slot < 4; slot++) {
-      const entry = this.tableData[start + slot]!;
-      if (entry.checkHash(hashcode)) return entry;
+      const idx = start + slot;
+      if (this.slotMatches(idx, hashcode)) {
+        const packed = this.data[idx]!;
+        if ((packed & 0xff) === HashType.NoHash) return null;
+        this.view.moveHash = this.moves[idx]!;
+        this.view.type = (packed & 0xff) as HashType;
+        this.view.depth = (packed >> 8) & 0xff;
+        this.view.score = packed >> 16;
+        return this.view;
+      }
     }
     return null;
   }
@@ -73,25 +122,42 @@ export class Hashtable {
     let replace = start;
 
     for (let slot = 0; slot < 4; slot++) {
-      const entry = this.tableData[start + slot]!;
-      if (entry.checkHash(hashcode)) {
+      const idx = start + slot;
+      if (this.slotMatches(idx, hashcode)) {
         // Preserve the stored move if the new one is invalid.
         const move =
-          Movement.moveTypeFromHash(moveHash) === MoveType.Invalid ? entry.moveHash : moveHash;
-        entry.setData(hashcode, move, hashType, depth, score, this.generation);
+          Movement.moveTypeFromHash(moveHash) === MoveType.Invalid ? this.moves[idx]! : moveHash;
+        this.writeSlot(idx, hashcode, move, hashType, depth, score);
         return;
       }
-      if (entry.type === HashType.NoHash) {
-        entry.setData(hashcode, moveHash, hashType, depth, score, this.generation);
+      const type = (this.data[idx]! & 0xff) as HashType;
+      if (type === HashType.NoHash) {
+        this.writeSlot(idx, hashcode, moveHash, hashType, depth, score);
         return;
       }
-      const replaceEntry = this.tableData[replace]!;
-      const c1 = replaceEntry.generation === this.generation ? 2 : 0;
-      const c2 = entry.generation === this.generation ? -2 : 0;
-      const c3 = entry.depth < replaceEntry.depth ? 1 : 0;
-      if (c1 + c2 + c3 > 0) replace = start + slot;
+      const replaceGeneration = Number(this.hashes[replace]! & GENERATION_MASK);
+      const slotGeneration = Number(this.hashes[idx]! & GENERATION_MASK);
+      const replaceDepth = (this.data[replace]! >> 8) & 0xff;
+      const slotDepth = (this.data[idx]! >> 8) & 0xff;
+      const c1 = replaceGeneration === this.generation ? 2 : 0;
+      const c2 = slotGeneration === this.generation ? -2 : 0;
+      const c3 = slotDepth < replaceDepth ? 1 : 0;
+      if (c1 + c2 + c3 > 0) replace = idx;
     }
-    this.tableData[replace]!.setData(hashcode, moveHash, hashType, depth, score, this.generation);
+    this.writeSlot(replace, hashcode, moveHash, hashType, depth, score);
+  }
+
+  private writeSlot(
+    idx: number,
+    hashcode: bigint,
+    moveHash: number,
+    hashType: HashType,
+    depth: number,
+    score: number,
+  ): void {
+    this.hashes[idx] = (hashcode & HASH_MASK) | BigInt(this.generation & 0x1ff);
+    this.moves[idx] = moveHash;
+    this.data[idx] = ((score << 16) | ((depth & 0xff) << 8) | (hashType & 0xff)) | 0;
   }
 
   /** Advance to the next search generation (ages existing entries). */

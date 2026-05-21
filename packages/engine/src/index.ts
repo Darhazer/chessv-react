@@ -49,7 +49,7 @@ export { Game, NodeType } from './game.js';
 export type { SearchInfo } from './game.js';
 export { Evaluation } from './evaluation.js';
 export { Hashtable } from './hashtable.js';
-export { HashType, TTHashEntry } from './ttHashEntry.js';
+export { HashType } from './ttHashEntry.js';
 export { Statistics } from './statistics.js';
 export { TimeControl } from './timeControl.js';
 export { GenericPiece } from './genericPiece.js';
