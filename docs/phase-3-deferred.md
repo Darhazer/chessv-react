@@ -65,10 +65,12 @@ multi-path piece machinery Lemurian needed (`BentShaman`, `BentHero`,
 `SlidingGeneral`) lives in `packages/pieces/src/multiPath.ts` alongside
 `Falcon`.
 
+**Eurasian Chess — done.** Ports the xiangqi `KingFacingRule` and
+`PieceLocationRestrictionRule` into `packages/rules/src/`. The variant
+lives at `packages/variants/src/v10x10/eurasianChess.ts`.
+
 **Still deferred:**
 
-- Eurasian Chess (10×10) — needs the xiangqi `KingFacingRule` and a
-  `PieceLocationRestrictionRule` (palace).
 - 12×12: Gross Chess, Chess And A Half — both need bespoke rules.
 - 9×10: Yang Qi — also needs the custom king-swap rule.
 
@@ -167,7 +169,7 @@ the Phase-3 batches.
 | Variant | Source file(s) | Notes |
 | --- | --- | --- |
 | ✅ Archchess (10×10) | `Rules/KingsLeapRule.cs` | King may leap once per game. Done. |
-| Brouhaha (10x10) | `Rules/Brouhaha/` | Border rule + conditional move capabilities for Cleric/Scout. |
+| ✅ Brouhaha (10×10) | `Rules/Brouhaha/` | Border rule + conditional move capabilities for Cleric/Scout. Done. |
 | Odin's Rune Chess (10x10) | `Pieces/OdinsRune/`, `Rules/OdinsRune/` | Custom move generators (adjacency-based). |
 | Odyssey (12x12) | `Rules/Odyssey/` | Assassin trade-restriction rule; multi-char piece notation. |
 | Symmetric Chess (9x8) | `Rules/Symmetric/BishopConversionRule.cs` | ~550 lines of bishop-conversion privilege bookkeeping. |

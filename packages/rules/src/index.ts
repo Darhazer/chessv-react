@@ -15,6 +15,7 @@ export { AliceRule } from './aliceRule.js';
 export { BareKingRule } from './bareKingRule.js';
 export { BasicPromotionRule } from './basicPromotionRule.js';
 export { BerolinaEnPassantRule } from './berolinaEnPassantRule.js';
+export { BrouhahaBorderRule } from './brouhahaBorderRule.js';
 export { CastlingRule } from './castlingRule.js';
 export { FlexibleCastlingRule } from './flexibleCastlingRule.js';
 export { CheckmateRule } from './checkmateRule.js';
@@ -25,8 +26,10 @@ export {
 } from './complexPromotionRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
+export { KingFacingRule } from './kingFacingRule.js';
 export { KingsLeapRule } from './kingsLeapRule.js';
 export { Move50Rule } from './move50Rule.js';
+export { PieceLocationRestrictionRule } from './pieceLocationRestrictionRule.js';
 export {
   DoubleMoveCompletionRule,
   MarseillaisMoveCompletionRule,

@@ -63,6 +63,8 @@ import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
 import { Archchess } from './v10x10/archchess.js';
+import { Brouhaha } from './v10x10/brouhaha.js';
+import { EurasianChess } from './v10x10/eurasianChess.js';
 import {
   EmperorsGame,
   GrandChess,
@@ -147,6 +149,8 @@ export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
 export { Archchess } from './v10x10/archchess.js';
+export { Brouhaha } from './v10x10/brouhaha.js';
+export { EurasianChess } from './v10x10/eurasianChess.js';
 export {
   EmperorsGame,
   GrandChess,
@@ -546,6 +550,36 @@ registerVariant({
     'and the historic "king\'s leap" — once per game each king may jump two squares orthogonally.',
   colorScheme: 'Grayscale',
   create: () => new Archchess(),
+});
+
+registerVariant({
+  name: 'Eurasian Chess',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2003',
+  inventedBy: 'Fergus Duniho',
+  description:
+    'A synthesis of European and Asian chess: the Grand Chess board plus the ' +
+    'Cannon and Vao from Chinese Chess. Kings can\'t cross the river or face ' +
+    'each other on an open line.',
+  colorScheme: 'Buckingham Green',
+  create: () => new EurasianChess(),
+});
+
+registerVariant({
+  name: 'Brouhaha',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Greg Strong',
+  description:
+    'Standard chess framed by extra Clerics and Scouts on the border. Once a ' +
+    'border piece moves off, nothing else may step onto its square — the game ' +
+    'collapses to ordinary 8 x 8 chess as development progresses.',
+  colorScheme: 'Buckingham Green',
+  create: () => new Brouhaha(),
 });
 
 registerVariant({
