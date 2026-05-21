@@ -5,18 +5,7 @@ engine and GUI originally written in C#/.NET by Greg Strong. This project
 reimplements ChessV in TypeScript and React so every variant it ships can be
 played in the browser.
 
-## Status
-
-| Phase | Scope | Status |
-| ----- | ----- | ------ |
-| 0 | Monorepo scaffold | done |
-| 1 | Core engine + Standard Chess playable | done |
-| 2 | AI engine (Web Worker) | done |
-| 3 | Variant catalog | done — 85 variants registered |
-| 4 | Themes, PGN, polish | done |
-| 5 | Hardening / parity testing | done |
-
-### Variant coverage
+## Variant coverage
 
 ChessV's C# source has 114 `[Game]` attribute entries. After accounting for
 the 16 "Generic" UI templates (configuration scaffolds for build-your-own
