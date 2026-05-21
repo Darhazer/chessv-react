@@ -981,6 +981,31 @@ export class Game extends ExObject {
     throw new Error('No rule handled the NoMovesResult message');
   }
 
+  /**
+   * Map {@link testForWinLossDraw} to a search score, or null when the game
+   * is still in progress. Centralises the response → score mapping used at
+   * the head of every search routine.
+   */
+  private terminalScore(ply: number): number | null {
+    const response = this.testForWinLossDraw(this.currentSide, ply);
+    if (response === MoveEventResponse.NotHandled) return null;
+    if (response === MoveEventResponse.GameDrawn) return 0;
+    if (response === MoveEventResponse.GameWon) return INFINITY - ply;
+    if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
+    return null;
+  }
+
+  /**
+   * Score returned when the side to move has no legal moves. Mates always
+   * score from the loser's perspective; stalemates are drawn.
+   */
+  private noMovesScore(ply: number): number {
+    const result = this.noMovesResult(this.currentSide, ply);
+    if (result === MoveEventResponse.GameWon) return INFINITY - ply;
+    if (result === MoveEventResponse.GameLost) return -INFINITY + ply;
+    return 0;
+  }
+
   /** The Zobrist hash of the current position at the given ply. */
   getPositionHashCode(ply: number): bigint {
     let hash = this.board.hashCode;
@@ -1868,12 +1893,8 @@ export class Game extends ExObject {
 
   /** Full-window (principal-variation) search. */
   searchPV(alpha: number, beta: number, depth: number, ply: number): number {
-    const response = this.testForWinLossDraw(this.currentSide, ply);
-    if (response !== MoveEventResponse.NotHandled) {
-      if (response === MoveEventResponse.GameDrawn) return 0;
-      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
-      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
-    }
+    const terminal = this.terminalScore(ply);
+    if (terminal !== null) return terminal;
     if (this.statistics.nodes % 1024 === 0) {
       this.doBookkeeping();
       if (this.abortSearchFlag) return 0;
@@ -2001,12 +2022,7 @@ export class Game extends ExObject {
       moveNumber++;
     }
 
-    if (moveNumber === 0) {
-      const result = this.noMovesResult(this.currentSide, ply);
-      if (result === MoveEventResponse.GameWon) return INFINITY - ply;
-      if (result === MoveEventResponse.GameLost) return -INFINITY + ply;
-      return 0;
-    }
+    if (moveNumber === 0) return this.noMovesScore(ply);
 
     const positionHash = this.getPositionHashCode(ply);
     if (bestScore < alpha) {
@@ -2039,12 +2055,8 @@ export class Game extends ExObject {
     tryNullMove: boolean,
     nodeType: NodeType,
   ): number {
-    const response = this.testForWinLossDraw(this.currentSide, ply);
-    if (response !== MoveEventResponse.NotHandled) {
-      if (response === MoveEventResponse.GameDrawn) return 0;
-      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
-      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
-    }
+    const terminal = this.terminalScore(ply);
+    if (terminal !== null) return terminal;
     if (this.statistics.nodes % 1024 === 0) {
       this.doBookkeeping();
       if (this.abortSearchFlag) return 0;
@@ -2284,12 +2296,7 @@ export class Game extends ExObject {
       moveNumber++;
     }
 
-    if (moveNumber === 0) {
-      const result = this.noMovesResult(this.currentSide, ply);
-      if (result === MoveEventResponse.GameWon) return INFINITY - ply;
-      if (result === MoveEventResponse.GameLost) return -INFINITY + ply;
-      return 0;
-    }
+    if (moveNumber === 0) return this.noMovesScore(ply);
     return bestScore;
   }
 
@@ -2301,12 +2308,8 @@ export class Game extends ExObject {
     ply: number,
     recaptureSquare = -1,
   ): number {
-    const response = this.testForWinLossDraw(this.currentSide, ply);
-    if (response !== MoveEventResponse.NotHandled) {
-      if (response === MoveEventResponse.GameDrawn) return 0;
-      if (response === MoveEventResponse.GameWon) return INFINITY - ply;
-      if (response === MoveEventResponse.GameLost) return -INFINITY + ply;
-    }
+    const terminal = this.terminalScore(ply);
+    if (terminal !== null) return terminal;
 
     this.searchStack[ply]!.pv.set(ply, 0);
     this.searchStack[ply + 1]!.pv.set(ply, 0);
