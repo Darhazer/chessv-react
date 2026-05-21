@@ -53,7 +53,8 @@ export class BerolinaEnPassantRule extends Rule {
     this.gameHistoryCaptureSquares = new Int32Array(MAX_GAME_LENGTH);
     this.gameHistoryMoverSquares = new Int32Array(MAX_GAME_LENGTH);
 
-    const { moves, count } = this.pawnType.getMoveCapabilities();
+    const moves = this.pawnType.moveCapabilities;
+    const count = this.pawnType.nMoveCapabilities;
     for (let n = 0; n < count; n++) {
       if (moves[n]!.canCapture) {
         this.captureDirections[0] = game.playerDirection(0, moves[n]!.nDirection);

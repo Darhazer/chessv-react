@@ -44,7 +44,8 @@ export class KingsCourt extends Generic12x8 {
     this.addPieceType((this.chancellor = new Amazon('Chancellor', 'C', 700, 700, 'Duke')));
     // The Chancellor in King's Court is a *range-limited* Amazon — any
     // sliding move is capped at two squares.
-    const { moves, count } = this.chancellor.getMoveCapabilities();
+    const moves = this.chancellor.moveCapabilities;
+    const count = this.chancellor.nMoveCapabilities;
     for (let i = 0; i < count; i++) {
       if (moves[i]!.maxSteps > 1) moves[i]!.maxSteps = 2;
     }

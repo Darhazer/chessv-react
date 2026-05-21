@@ -96,7 +96,8 @@ export abstract class Generic__x10 extends GenericChess {
       this.pawn.addMoveCapability(move);
     } else if (value === 'Fast Pawn') {
       // Find the pawn's forward move capability and extend it to two spaces.
-      const { moves, count } = this.pawn.getMoveCapabilities();
+      const moves = this.pawn.moveCapabilities;
+      const count = this.pawn.nMoveCapabilities;
       for (let i = 0; i < count; i++) {
         const move = moves[i]!;
         if (

@@ -163,7 +163,8 @@ const valkyrieHandler: CustomMoveGenerationHandler = (
   capturesOnly: boolean,
 ): boolean => {
   const board = piece.board;
-  const { moves, count } = pieceType.getMoveCapabilities();
+  const moves = pieceType.moveCapabilities;
+  const count = pieceType.nMoveCapabilities;
   for (let m = 0; m < count; m++) {
     const move = moves[m]!;
     let step = 1;
@@ -232,7 +233,8 @@ const forestOxHandler: CustomMoveGenerationHandler = (
   capturesOnly: boolean,
 ): boolean => {
   const board = piece.board;
-  const { moves, count } = pieceType.getMoveCapabilities();
+  const moves = pieceType.moveCapabilities;
+  const count = pieceType.nMoveCapabilities;
   for (let m = 0; m < count; m++) {
     const move = moves[m]!;
     let step = 1;

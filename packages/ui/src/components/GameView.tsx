@@ -16,7 +16,7 @@ import {
   moveTypeHasProperty,
 } from '@chessv/engine';
 import { createVariant } from '@chessv/variants';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
 import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
@@ -104,12 +104,15 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   // Auto-switch the rendered set if the user's preferred one is missing any of
   // this variant's piece types (e.g. Omega Chess needs Wizard, which Standard
   // doesn't ship). The stored preference is left alone so we revert to it on
-  // variants where it does cover everything.
-  const requiredPieces: string[][] = [];
-  for (let i = 0; i < game.nPieceTypes; i++) {
-    requiredPieces.push(game.getPieceType(i).imagePreferenceList);
-  }
-  const effectivePieceSetName = pickPieceSet(pieceSetName, requiredPieces);
+  // variants where it does cover everything. The piece type list is fixed for
+  // the lifetime of the variant, so we only recompute when the variant changes.
+  const effectivePieceSetName = useMemo(() => {
+    const requiredPieces: string[][] = [];
+    for (let i = 0; i < game.nPieceTypes; i++) {
+      requiredPieces.push(game.getPieceType(i).imagePreferenceList);
+    }
+    return pickPieceSet(pieceSetName, requiredPieces);
+  }, [game, pieceSetName]);
   const pieceSet = PIECE_SETS[effectivePieceSetName] ?? null;
   const autoSwitched = effectivePieceSetName !== pieceSetName;
   const moves = legalMoves(game);
@@ -270,22 +273,31 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
     }
   };
 
-  const legalTargets = new Set<number>(
-    selectedSquare === null
-      ? []
-      : moves.filter((m) => m.fromSquare === selectedSquare).map((m) => m.toSquare),
+  const legalTargets = useMemo(
+    () =>
+      new Set<number>(
+        selectedSquare === null
+          ? []
+          : moves.filter((m) => m.fromSquare === selectedSquare).map((m) => m.toSquare),
+      ),
+    [selectedSquare, moves],
   );
 
   // Captured pieces, grouped by the capturing side. Each captured piece is
-  // shown as its (now-lost) owner's glyph.
-  const capturedByWhite: string[] = [];
-  const capturedByBlack: string[] = [];
-  for (const played of game.getMoveHistory()) {
-    if (played.pieceCaptured !== null) {
-      const glyph = pieceGlyph(played.pieceCaptured.pieceType.internalName);
-      (played.player === 0 ? capturedByWhite : capturedByBlack).push(glyph);
+  // shown as its (now-lost) owner's glyph. Walks the move history; only
+  // changes when the game state (version) does.
+  const { capturedByWhite, capturedByBlack } = useMemo(() => {
+    const white: string[] = [];
+    const black: string[] = [];
+    for (const played of game.getMoveHistory()) {
+      if (played.pieceCaptured !== null) {
+        const glyph = pieceGlyph(played.pieceCaptured.pieceType.internalName);
+        (played.player === 0 ? white : black).push(glyph);
+      }
     }
-  }
+    return { capturedByWhite: white, capturedByBlack: black };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, version]);
 
   const status = !game.result.isNone
     ? game.result.isDraw

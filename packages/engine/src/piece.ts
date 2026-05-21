@@ -94,7 +94,8 @@ export class Piece extends GenericPiece {
       }
     }
 
-    const { moves, count } = pieceType.getMoveCapabilities();
+    const moves = pieceType.moveCapabilities;
+    const count = pieceType.nMoveCapabilities;
     for (let n = 0; n < count; n++) {
       const move = moves[n]!;
       if (

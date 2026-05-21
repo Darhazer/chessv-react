@@ -40,6 +40,9 @@ export abstract class MoveCompletionRule extends Rule {
  * The standard turn order: players alternate, the turn number increments each
  * time play returns to player 0.
  */
+/** Pre-computed side-to-move hash contributions: 0 for white, all-ones for black. */
+const SIDE_HASH: readonly [bigint, bigint] = [0n, (1n << 64n) - 1n];
+
 export class MoveCompletionDefaultRule extends MoveCompletionRule {
   protected turnNumberValue = 0;
 
@@ -48,8 +51,7 @@ export class MoveCompletionDefaultRule extends MoveCompletionRule {
   }
 
   override getPositionHashCode(_ply: number): bigint {
-    // Fold the side to move into the hash: 0 for player 0, all-ones for player 1.
-    return BigInt(-this.requireGame().currentSide) & ((1n << 64n) - 1n);
+    return SIDE_HASH[this.requireGame().currentSide as 0 | 1];
   }
 
   override completeMove(_move: MoveInfo, _ply: number): void {

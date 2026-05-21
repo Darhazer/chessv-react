@@ -41,7 +41,8 @@ export class RepetitionDrawRule extends Rule {
 
   override testForWinLossDraw(_currentPlayer: number, ply: number): MoveEventResponse {
     let count = 1;
-    const hash = this.game!.getPositionHashCode(ply);
+    // `moveMade` runs before this for the same ply, so the hash is already cached.
+    const hash = this.searchStackHashes[ply]!;
     for (let x = ply - 1; x > 0; x--) {
       if (this.searchStackHashes[x] === hash) count++;
     }

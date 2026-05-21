@@ -26,7 +26,7 @@ import {
 import { CheckmateRule } from './checkmateRule.js';
 
 /** One configured castling move (king + partner piece displacement). */
-interface CastlingMove {
+export interface CastlingMove {
   kingFromSquare: number;
   kingToSquare: number;
   otherFromSquare: number;
@@ -193,53 +193,8 @@ export class CastlingRule extends Rule {
     for (let x = 0; x < this.nCastlingMoves[game.currentSide]!; x++) {
       const cm = this.castlingMoves[game.currentSide]![x]!;
       if ((cm.requiredPriv & castlingPriv) === 0) continue;
-
-      const minSquare = Math.min(
-        cm.kingFromSquare,
-        cm.kingToSquare,
-        cm.otherFromSquare,
-        cm.otherToSquare,
-      );
-      const maxSquare = Math.max(
-        cm.kingFromSquare,
-        cm.kingToSquare,
-        cm.otherFromSquare,
-        cm.otherToSquare,
-      );
-
-      // Every square along the path must be empty (except the castling pieces).
-      let squaresEmpty = true;
-      for (
-        let file = board.getFile(minSquare);
-        squaresEmpty && file <= board.getFile(maxSquare);
-        file++
-      ) {
-        const sq = file * board.numRanks + board.getRank(minSquare);
-        if (
-          sq !== cm.kingFromSquare &&
-          sq !== cm.otherFromSquare &&
-          board.pieceAt(sq) != null
-        ) {
-          squaresEmpty = false;
-        }
-      }
-      if (!squaresEmpty) continue;
-
-      // In games with check, the king may not pass through an attacked square.
-      let squaresAttacked = false;
-      if (this.hasCheckmateRule) {
-        const step = cm.kingFromSquare < cm.kingToSquare ? 1 : -1;
-        for (
-          let file = board.getFile(cm.kingFromSquare);
-          !squaresAttacked &&
-          (step > 0 ? file <= board.getFile(cm.kingToSquare) : file >= board.getFile(cm.kingToSquare));
-          file += step
-        ) {
-          const sq = file * board.numRanks + board.getRank(cm.kingFromSquare);
-          if (game.isSquareAttacked(sq, game.currentSide ^ 1)) squaresAttacked = true;
-        }
-      }
-      if (squaresAttacked) continue;
+      if (!this.isCastlingPathEmpty(cm)) continue;
+      if (this.isKingPathAttacked(cm)) continue;
 
       if (board.pieceAt(cm.kingFromSquare) == null) {
         throw new Error('CastlingRule: king missing from its castling square');
@@ -251,6 +206,57 @@ export class CastlingRule extends Rule {
       list.addDrop(other, cm.otherToSquare, null);
       list.endMoveAdd(100);
     }
+  }
+
+  /**
+   * True iff every square in the king/partner travel range is empty,
+   * excepting the king's and partner's source squares.
+   */
+  protected isCastlingPathEmpty(cm: CastlingMove): boolean {
+    const board = this.board!;
+    const minSquare = Math.min(
+      cm.kingFromSquare,
+      cm.kingToSquare,
+      cm.otherFromSquare,
+      cm.otherToSquare,
+    );
+    const maxSquare = Math.max(
+      cm.kingFromSquare,
+      cm.kingToSquare,
+      cm.otherFromSquare,
+      cm.otherToSquare,
+    );
+    const rank = board.getRank(minSquare);
+    const lastFile = board.getFile(maxSquare);
+    for (let file = board.getFile(minSquare); file <= lastFile; file++) {
+      const sq = board.rankFileToSquare(rank, file);
+      if (sq !== cm.kingFromSquare && sq !== cm.otherFromSquare && board.pieceAt(sq) != null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * True iff any square the king passes through (or lands on) is attacked.
+   * No-op in games without a CheckmateRule.
+   */
+  protected isKingPathAttacked(cm: CastlingMove): boolean {
+    if (!this.hasCheckmateRule) return false;
+    const game = this.game!;
+    const board = this.board!;
+    const step = cm.kingFromSquare < cm.kingToSquare ? 1 : -1;
+    const rank = board.getRank(cm.kingFromSquare);
+    const endFile = board.getFile(cm.kingToSquare);
+    for (
+      let file = board.getFile(cm.kingFromSquare);
+      step > 0 ? file <= endFile : file >= endFile;
+      file += step
+    ) {
+      const sq = board.rankFileToSquare(rank, file);
+      if (game.isSquareAttacked(sq, game.currentSide ^ 1)) return true;
+    }
+    return false;
   }
 
   override getNotesForPieceType(type: PieceType, notes: string[]): void {

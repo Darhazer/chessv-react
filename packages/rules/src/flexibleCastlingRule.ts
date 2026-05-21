@@ -10,7 +10,7 @@
  ***************************************************************************/
 
 import { type MoveList, MoveType } from '@chessv/engine';
-import { CastlingRule } from './castlingRule.js';
+import { type CastlingMove, CastlingRule } from './castlingRule.js';
 
 /**
  * Flexible castling: the king slides two **or more** squares toward the
@@ -54,16 +54,15 @@ export class FlexibleCastlingRule extends CastlingRule {
       // 1. The squares between the king and the corner piece must be empty
       //    (skipping the partner piece's own square).
       let squaresEmpty = true;
-      const inEmptinessRange = (file: number): boolean =>
-        slideRight
-          ? file <= kingToFile || file <= otherFromFile
-          : file >= kingToFile || file >= otherFromFile;
       for (
         let file = kingFromFile + step;
-        squaresEmpty && inEmptinessRange(file);
+        squaresEmpty &&
+        (slideRight
+          ? file <= kingToFile || file <= otherFromFile
+          : file >= kingToFile || file >= otherFromFile);
         file += step
       ) {
-        const sq = file * board.numRanks + rank;
+        const sq = board.rankFileToSquare(rank, file);
         if (sq !== cm.otherFromSquare && board.pieceAt(sq) != null) squaresEmpty = false;
       }
       if (!squaresEmpty) continue;
@@ -78,56 +77,77 @@ export class FlexibleCastlingRule extends CastlingRule {
           !squaresAttacked && (slideRight ? file <= kingToFile : file >= kingToFile);
           file += step
         ) {
-          const sq = file * board.numRanks + rank;
+          const sq = board.rankFileToSquare(rank, file);
           if (game.isSquareAttacked(sq, game.currentSide ^ 1)) squaresAttacked = true;
           slideDistance++;
         }
       } else {
-        // No checkmate rule — accumulate slide distance for the cap.
         slideDistance += Math.abs(kingToFile - kingFromFile) + 1;
       }
       if (squaresAttacked) continue;
 
       // 3. Emit the canonical king-slides-to-kingToSquare move, with the
-      //    partner piece jumping to the king's other side.
-      const otherDropFile1 = kingToFile - step;
-      const otherDrop1 = otherDropFile1 * board.numRanks + rank;
-      list.beginMoveAdd(MoveType.Castling, cm.kingFromSquare, cm.kingToSquare);
-      {
-        const king = list.addPickup(cm.kingFromSquare);
-        const other = list.addPickup(cm.otherFromSquare);
-        list.addDrop(king, cm.kingToSquare, null);
-        list.addDrop(other, otherDrop1, null);
-        list.endMoveAdd(1000);
-      }
+      //    partner piece jumping to the king's other side. Subclasses can
+      //    redirect destinations via {@link translateDestination} (Alice).
+      this.tryEmitCastling(
+        list,
+        cm,
+        cm.kingToSquare,
+        board.rankFileToSquare(rank, kingToFile - step),
+      );
 
       // 4. Try farther king destinations. The king may continue toward the
       //    partner piece up to (but normally not onto) its square. The
       //    `otherTo` field carries an allow-onto-partner flag (0 or 1).
       const allowOntoPartner = cm.otherToSquare;
       const farLimit = otherFromFile + step * allowOntoPartner; // exclusive
-      const inFarRange = (file: number): boolean =>
-        slideRight ? file < farLimit : file > farLimit;
       for (
         let file = kingToFile + step;
-        !squaresAttacked && inFarRange(file) && slideDistance <= this.maxSlideRange;
+        !squaresAttacked &&
+        (slideRight ? file < farLimit : file > farLimit) &&
+        slideDistance <= this.maxSlideRange;
         file += step
       ) {
-        const sq = file * board.numRanks + rank;
+        const sq = board.rankFileToSquare(rank, file);
         if (this.hasCheckmateRule && game.isSquareAttacked(sq, game.currentSide ^ 1)) {
           squaresAttacked = true;
         }
         if (!squaresAttacked) {
-          const otherDrop = (file - step) * board.numRanks + rank;
-          list.beginMoveAdd(MoveType.Castling, cm.kingFromSquare, sq);
-          const king = list.addPickup(cm.kingFromSquare);
-          const other = list.addPickup(cm.otherFromSquare);
-          list.addDrop(king, sq, null);
-          list.addDrop(other, otherDrop, null);
-          list.endMoveAdd(1000);
+          this.tryEmitCastling(list, cm, sq, board.rankFileToSquare(rank, file - step));
         }
         slideDistance++;
       }
     }
+  }
+
+  /**
+   * Emit one castling move after translating destinations (a no-op in the
+   * base rule; Alice maps them to the mirror sub-board) and checking those
+   * destinations are empty. The `from` square in the emitted move stays on
+   * the originating board so the move is recognised by the move tables.
+   */
+  protected tryEmitCastling(
+    list: MoveList,
+    cm: CastlingMove,
+    kingDest: number,
+    otherDest: number,
+  ): void {
+    const board = this.board!;
+    const kingTo = this.translateDestination(kingDest);
+    const otherTo = this.translateDestination(otherDest);
+    if (kingTo !== kingDest || otherTo !== otherDest) {
+      if (board.pieceAt(kingTo) !== null || board.pieceAt(otherTo) !== null) return;
+    }
+    list.beginMoveAdd(MoveType.Castling, cm.kingFromSquare, kingTo);
+    const king = list.addPickup(cm.kingFromSquare);
+    const other = list.addPickup(cm.otherFromSquare);
+    list.addDrop(king, kingTo, null);
+    list.addDrop(other, otherTo, null);
+    list.endMoveAdd(1000);
+  }
+
+  /** Map a destination square (identity in the base rule). */
+  protected translateDestination(square: number): number {
+    return square;
   }
 }

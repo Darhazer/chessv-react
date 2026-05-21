@@ -107,8 +107,10 @@ export class PieceType extends ExObject {
   averageSafeChecks = 0;
 
   // Internal state.
-  protected moveCapabilities: (MoveCapability | undefined)[] = new Array(MAX_MOVE_CAPABILITIES);
-  protected nMoveCapabilities = 0;
+  /** Move capability buffer; valid entries are `[0, nMoveCapabilities)`. */
+  readonly moveCapabilities: (MoveCapability | undefined)[] = new Array(MAX_MOVE_CAPABILITIES);
+  /** Number of valid entries in {@link moveCapabilities}. */
+  nMoveCapabilities = 0;
   protected hashKeyIndex: Int32Array = new Int32Array(0);
   protected pawnHashKeyIndex: Int32Array = new Int32Array(0);
   protected materialHashKeyIndex: Int32Array[] = [];
@@ -157,14 +159,12 @@ export class PieceType extends ExObject {
     for (let x = 0; x < this.nMoveCapabilities; x++) {
       const move = this.moveCapabilities[x]!;
       move.initialize(game);
-      // Resolve the direction number within the game's direction index.
       for (let y = 0; y < gameDirections.length; y++) {
         if (move.direction.equals(gameDirections[y]!)) {
           move.nDirection = y;
           break;
         }
       }
-      // Resolve direction numbers for each step of each path.
       if (move.pathInfo != null) {
         this.simpleMoveGeneration = false;
         for (const dirPath of move.pathInfo.pathDirections) {
@@ -363,11 +363,6 @@ export class PieceType extends ExObject {
 
   // *** MOVE CAPABILITIES *** //
 
-  /** The list of move capabilities and its used length. */
-  getMoveCapabilities(): { moves: (MoveCapability | undefined)[]; count: number } {
-    return { moves: this.moveCapabilities, count: this.nMoveCapabilities };
-  }
-
   /** Find the move capability travelling in a given direction, if any. */
   findMove(dir: Direction): MoveCapability | null {
     for (let x = 0; x < this.nMoveCapabilities; x++) {
@@ -424,8 +419,9 @@ export class PieceType extends ExObject {
 
   /** Copy all of another piece type's move capabilities into this one. */
   addMovesOf(other: PieceType): void {
-    const { moves, count } = other.getMoveCapabilities();
-    for (let x = 0; x < count; x++) this.addMoveCapability(moves[x]!);
+    for (let x = 0; x < other.nMoveCapabilities; x++) {
+      this.addMoveCapability(other.moveCapabilities[x]!);
+    }
   }
 
   /** Remove the move capability travelling in the given direction. */

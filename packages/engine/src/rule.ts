@@ -108,10 +108,11 @@ export class Rule {
   /** Generate moves not produced by normal piece movement (castling, drops...). */
   generateSpecialMoves(_list: MoveList, _capturesOnly: boolean, _ply: number): void {}
 
-  /** Adjust the evaluation; returns the new midgame/endgame pair. */
-  adjustEvaluation(_ply: number, midgameEval: number, endgameEval: number): [number, number] {
-    return [midgameEval, endgameEval];
-  }
+  /**
+   * Adjust the running evaluation. `scratch[0]` is midgame, `scratch[1]` is
+   * endgame; rules mutate the slots in place to avoid per-node allocation.
+   */
+  adjustEvaluation(_ply: number, _scratch: number[]): void {}
 
   /** Produce a textual description of a move; returns it via the result. */
   describeMove(

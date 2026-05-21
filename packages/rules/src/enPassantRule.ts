@@ -54,7 +54,8 @@ export class EnPassantRule extends Rule {
     this.gameHistory = new Int32Array(MAX_GAME_LENGTH);
 
     const attackDirs: number[] = [];
-    const { moves, count } = this.pawnType.getMoveCapabilities();
+    const moves = this.pawnType.moveCapabilities;
+    const count = this.pawnType.nMoveCapabilities;
     for (let n = 0; n < count; n++) {
       if (moves[n]!.canCapture) attackDirs.push(moves[n]!.nDirection);
     }

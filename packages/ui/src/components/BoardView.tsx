@@ -16,7 +16,7 @@ import {
   type Game,
   TwoBoards,
 } from '@chessv/engine';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { type ColorScheme, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import { type PieceSetManifest, resolvePieceImage } from '../pieceSets.js';
@@ -71,7 +71,7 @@ interface CellSpec {
 }
 
 /** Renders the board, pieces and move highlights as scalable SVG. */
-export function BoardView({
+function BoardViewImpl({
   game,
   selectedSquare,
   legalTargets,
@@ -84,7 +84,7 @@ export function BoardView({
     colorScheme;
   const board = game.board;
   const { numFiles, numRanks } = board;
-  const lastMoveSquares = new Set(lastMove ?? []);
+  const lastMoveSquares = useMemo(() => new Set(lastMove ?? []), [lastMove]);
 
   // Texture resolution: when the scheme names a texture, prefer the image
   // (via an SVG <pattern>) but fall back to the scheme's flat colour if the
@@ -371,3 +371,5 @@ export function BoardView({
     </svg>
   );
 }
+
+export const BoardView = memo(BoardViewImpl);

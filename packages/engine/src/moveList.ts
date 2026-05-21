@@ -38,7 +38,8 @@ export class MoveList {
   /** When true, every added move is verified legal (illegal ones are dropped). */
   legalMovesOnly = false;
 
-  private readonly moves: MoveInfo[];
+  /** Backing buffer of generated moves; only `[0, count)` are valid. */
+  readonly moves: MoveInfo[];
   private moveCursor = 0;
   private readonly pickups: Pickup[];
   private pickupCursor = 0;
@@ -138,11 +139,6 @@ export class MoveList {
     for (let x = 0; x < this.moveCursor; x++) {
       this.moves[x]!.evaluation = moveScores.get(this.moves[x]!.hash) ?? 0;
     }
-  }
-
-  /** The backing move array and how many entries are used. */
-  getMoves(): { moves: MoveInfo[]; count: number } {
-    return { moves: this.moves, count: this.moveCursor };
   }
 
   /** Find a generated move by its packed hash. */

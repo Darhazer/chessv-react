@@ -92,6 +92,9 @@ export interface SearchInfo {
   pv: string[];
 }
 
+/** Shared sentinel for the search path's null-move ply — avoids per-call allocation. */
+const NULL_MOVEMENT_MARKER = new Movement(0, 0, 0, MoveType.NullMove);
+
 export class Game extends ExObject {
   // *** CONSTANTS *** //
   static readonly MAX_DIRECTIONS = 48;
@@ -192,6 +195,8 @@ export class Game extends ExObject {
   // *** AI ENGINE (Search.cs / Evaluate.cs) *** //
   /** Game-specific evaluation terms applied on top of material + PST. */
   protected readonly evaluations: Evaluation[] = [];
+  /** Reused [midgame, endgame] scratch passed to {@link Rule.adjustEvaluation}. */
+  private readonly evalScratch: number[] = [0, 0];
   /** The transposition table; created lazily on the first search. */
   protected hashtable: Hashtable | null = null;
   /** Transposition-table size budget, in megabytes. */
@@ -260,14 +265,12 @@ export class Game extends ExObject {
 
     // *** PIECE TYPES *** //
     this.addPieceTypes();
-    // Remove any piece types that have been disabled.
     for (let n = this.pieceTypes.length - 1; n >= 0; n--) {
       if (!this.pieceTypes[n]!.enabled) {
         this.disabledPieceTypes.push(this.pieceTypes[n]!);
         this.pieceTypes.splice(n, 1);
       }
     }
-    // Number the surviving piece types.
     for (let n = 0; n < this.pieceTypes.length; n++) {
       this.pieceTypeNumbers.set(this.pieceTypes[n]!, n);
     }
@@ -327,9 +330,9 @@ export class Game extends ExObject {
     for (let pass = 1; pass <= 2; pass++) {
       for (let player = 0; player < this.numPlayers; player++) {
         for (const type of this.pieceTypes) {
-          const { moves, count } = type.getMoveCapabilities();
+          const count = type.nMoveCapabilities;
           for (let y = 0; y < count; y++) {
-            const move = moves[y]!;
+            const move = type.moveCapabilities[y]!;
             if (pass === 2 || move.maxSteps > 1) {
               const dir = this.symmetry.translateDirection(player, move.direction);
               let isNew = true;
@@ -390,9 +393,9 @@ export class Game extends ExObject {
     for (let dir = 0; dir < this.directions.length; dir++) {
       for (let player = 0; player < this.numPlayers; player++) {
         for (const type of this.pieceTypes) {
-          const { moves, count } = type.getMoveCapabilities();
+          const count = type.nMoveCapabilities;
           for (let n = 0; n < count; n++) {
-            const move = moves[n]!;
+            const move = type.moveCapabilities[n]!;
             const playerDirection = this.playerDirection(player, dir);
             if (
               dir === move.nDirection &&
@@ -867,15 +870,16 @@ export class Game extends ExObject {
 
   /** The moves available at the root, with the count actually populated. */
   getRootMoves(): { moves: MoveInfo[]; count: number } {
-    return this.moveLists[1]!.getMoves();
+    const list = this.moveLists[1]!;
+    return { moves: list.moves, count: list.count };
   }
 
   /** The root moves made by a specific piece. */
   getRootMovesForPiece(movingPiece: Piece): MoveInfo[] {
-    const { moves, count } = this.moveLists[1]!.getMoves();
+    const list = this.moveLists[1]!;
     const result: MoveInfo[] = [];
-    for (let x = 0; x < count; x++) {
-      if (moves[x]!.pieceMoved === movingPiece) result.push(moves[x]!);
+    for (let x = 0; x < list.count; x++) {
+      if (list.moves[x]!.pieceMoved === movingPiece) result.push(list.moves[x]!);
     }
     return result;
   }
@@ -998,7 +1002,7 @@ export class Game extends ExObject {
     this.boardMoveStack.makingMove(this.moveLists[1]!, move);
     this.gameHistoryTurnNumbers[this.gameHistory.length] = this.gameTurnNumber;
     // `move` lives in moveLists[1] and is reused on the next generation —
-    // clone it so the history snapshot is stable.
+    // the clone keeps the history snapshot stable.
     this.gameHistory.push(move.clone());
 
     for (const rule of this.rules) rule.moveMade(move, this.ply);
@@ -1051,10 +1055,10 @@ export class Game extends ExObject {
 
   /** Perform a move identified only by its packed {@link Movement}. */
   makeMovement(move: Movement, highlightMove: boolean): void {
-    const { moves, count } = this.moveLists[1]!.getMoves();
-    for (let x = 0; x < count; x++) {
-      if (moves[x]!.hash === move.hash) {
-        this.makeMove(moves[x]!, highlightMove);
+    const list = this.moveLists[1]!;
+    for (let x = 0; x < list.count; x++) {
+      if (list.moves[x]!.hash === move.hash) {
+        this.makeMove(list.moves[x]!, highlightMove);
         return;
       }
     }
@@ -1369,7 +1373,8 @@ export class Game extends ExObject {
                 pieceOnSquare.pieceType.hasMovesWithPaths ||
                 pieceOnSquare.pieceType.hasMovesWithConditionalLocation
               ) {
-                const { moves, count } = pieceOnSquare.pieceType.getMoveCapabilities();
+                const moves = pieceOnSquare.pieceType.moveCapabilities;
+                const count = pieceOnSquare.pieceType.nMoveCapabilities;
                 for (let x = 0; x < count; x++) {
                   if (
                     this.playerDirection(player, moves[x]!.nDirection) ===
@@ -1490,7 +1495,8 @@ export class Game extends ExObject {
         }
       }
       nextVictim = attackers[victimIndex]!;
-      attackers.splice(victimIndex, 1);
+      attackers[victimIndex] = attackers[attackers.length - 1]!;
+      attackers.pop();
 
       if (nextVictim.midgameValue === 0) {
         return relativeSide === (this.seeAttackers[(side ^ 1) as 0 | 1].length !== 0);
@@ -1532,15 +1538,15 @@ export class Game extends ExObject {
    * and endgame according to the remaining material.
    */
   evaluate(): number {
-    let midgameEval = this.board.getMidgameMaterialEval(0) - this.board.getMidgameMaterialEval(1);
-    let endgameEval = this.board.getEndgameMaterialEval(0) - this.board.getEndgameMaterialEval(1);
+    const scratch = this.evalScratch;
+    scratch[0] = this.board.getMidgameMaterialEval(0) - this.board.getMidgameMaterialEval(1);
+    scratch[1] = this.board.getEndgameMaterialEval(0) - this.board.getEndgameMaterialEval(1);
 
-    for (const evaluation of this.evaluations) {
-      [midgameEval, endgameEval] = evaluation.adjustEvaluation(midgameEval, endgameEval);
-    }
-    for (const rule of this.rules) {
-      [midgameEval, endgameEval] = rule.adjustEvaluation(this.ply, midgameEval, endgameEval);
-    }
+    for (const evaluation of this.evaluations) evaluation.adjustEvaluation(scratch);
+    for (const rule of this.rules) rule.adjustEvaluation(this.ply, scratch);
+
+    let midgameEval = scratch[0]!;
+    let endgameEval = scratch[1]!;
 
     const materialEval = this.board.getPlayerMaterial(0) + this.board.getPlayerMaterial(1);
     const phase =
@@ -2129,7 +2135,7 @@ export class Game extends ExObject {
     ) {
       const nullMoveSide = this.currentSide;
       this.moveLists[ply]!.makeNullMove();
-      this.searchPath[ply] = new Movement(0, 0, 0, MoveType.NullMove);
+      this.searchPath[ply] = NULL_MOVEMENT_MARKER;
       const nullScore =
         this.currentSide !== nullMoveSide
           ? -this.search(-(beta - 1), depth - ONEPLY - nullReduction, ply + 1, false, nodeType)

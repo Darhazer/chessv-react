@@ -16,6 +16,7 @@ import {
   MoveType,
   type PieceType,
   Rule,
+  TwoBoards,
 } from '@chessv/engine';
 
 /**
@@ -39,17 +40,16 @@ export class AliceRule extends Rule {
     to: number,
     type: MoveType,
   ): MoveEventResponse {
-    const board = this.board!;
-    const half = board.numSquares / 2;
+    const board = this.board as TwoBoards;
     if (type === MoveType.StandardMove) {
-      const mirror = to >= half ? to - half : to + half;
+      const mirror = board.mirrorSquare(to);
       if (board.pieceAt(mirror) === null) {
         moves.addMove(from, mirror, true);
       }
       return MoveEventResponse.Handled;
     }
     if (type === MoveType.StandardCapture) {
-      const mirror = to >= half ? to - half : to + half;
+      const mirror = board.mirrorSquare(to);
       // The mirror square is the actual destination; the capture happens on
       // the original square (where the enemy piece sits). We have to pick
       // up both: the mover from `from`, and the captured piece from `to`.
@@ -66,7 +66,7 @@ export class AliceRule extends Rule {
   }
 
   override moveBeingMade(move: MoveInfo, _ply: number): MoveEventResponse {
-    const board = this.board!;
+    const board = this.board as TwoBoards;
     const game = this.game!;
     if (this.royalType === null) return MoveEventResponse.MoveOk;
     if (move.pieceMoved === null || move.pieceMoved.pieceType !== this.royalType) {
@@ -75,8 +75,7 @@ export class AliceRule extends Rule {
     // The king's actual destination is on the *other* board; we also need
     // to check that the originating board's mirror square isn't attacked
     // (otherwise the king would have been moving through check on its way).
-    const half = board.numSquares / 2;
-    const mirror = move.toSquare >= half ? move.toSquare - half : move.toSquare + half;
+    const mirror = board.mirrorSquare(move.toSquare);
     if (game.isSquareAttacked(mirror, move.player ^ 1)) return MoveEventResponse.IllegalMove;
     return MoveEventResponse.MoveOk;
   }

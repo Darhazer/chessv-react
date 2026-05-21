@@ -42,10 +42,11 @@ export class Evaluation {
   /** Release any large allocations. */
   releaseMemoryAllocations(): void {}
 
-  /** Adjust the running score; returns the new midgame/endgame pair. */
-  adjustEvaluation(midgameEval: number, endgameEval: number): [number, number] {
-    return [midgameEval, endgameEval];
-  }
+  /**
+   * Adjust the running evaluation. `scratch[0]` is midgame, `scratch[1]` is
+   * endgame; subclasses mutate the slots in place to avoid per-node allocation.
+   */
+  adjustEvaluation(_scratch: number[]): void {}
 
   /** React to a move being made. */
   moveBeingMade(_move: MoveInfo, _ply: number): void {}
