@@ -167,6 +167,50 @@ body {
   padding: 0.25rem;
 }
 
+.variant-options {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #2c2f36;
+  border-radius: 4px;
+  background: #1a1c20;
+}
+
+.variant-options-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b9bcc2;
+  margin-bottom: 0.4rem;
+}
+
+.variant-options-hint {
+  font-weight: 400;
+  color: #8a8d93;
+}
+
+.variant-options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.variant-options-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: #b9bcc2;
+  min-width: 11rem;
+}
+
+.variant-options-grid select {
+  padding: 0.25rem;
+}
+
+.variant-options-live {
+  font-size: 0.75rem;
+  color: #8a8d93;
+}
+
 .engine-info {
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;

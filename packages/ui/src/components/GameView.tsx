@@ -18,6 +18,7 @@ import {
 import { createVariant } from '@chessv/variants';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { BoardView } from './BoardView.js';
+import { resolveOverrides, VariantOptionsPanel } from './VariantOptionsPanel.js';
 import { COLOR_SCHEMES, DEFAULT_SCHEME } from '../colorSchemes.js';
 import { pieceGlyph } from '../pieceGlyphs.js';
 import { DEFAULT_PIECE_SET, PIECE_SETS, pickPieceSet } from '../pieceSets.js';
@@ -25,10 +26,23 @@ import { useAiEngine } from '../useAiEngine.js';
 import { useLocalStorage } from '../useLocalStorage.js';
 
 /** Build a fresh, initialized game for the named variant. */
-function createGame(variantName: string): Game {
+function createGame(variantName: string, overrides: Record<string, string>): Game {
   const game = createVariant(variantName);
+  if (Object.keys(overrides).length > 0) game.optionOverrides = overrides;
   game.initialize();
   return game;
+}
+
+/** Read the variant's option preferences from localStorage without subscribing. */
+function readSavedPrefs(variantName: string): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(`chessv:variantOptions:${variantName}`);
+    if (raw === null) return {};
+    return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    return {};
+  }
 }
 
 /** The legal moves for the current position. */
@@ -75,7 +89,18 @@ interface GameViewProps {
 
 /** The main game container. */
 export function GameView({ variantName }: GameViewProps): React.JSX.Element {
-  const gameRef = useRef<Game>(createGame(variantName));
+  // Resolve any saved option preferences (e.g. CwDA armies) before building
+  // the first game so it starts with the player's chosen / randomized armies.
+  // useRef so the resolved overrides are computed exactly once per mount.
+  const initialOverrides = useRef<Record<string, string> | null>(null);
+  if (initialOverrides.current === null) {
+    const probe = createGame(variantName, {});
+    initialOverrides.current = resolveOverrides(probe.getOptions(), readSavedPrefs(variantName));
+  }
+  const gameRef = useRef<Game>(createGame(variantName, initialOverrides.current));
+  const [activeOverrides, setActiveOverrides] = useState<Record<string, string>>(
+    initialOverrides.current,
+  );
   const moveHashes = useRef<number[]>([]);
   const aiBusy = useRef(false);
   const [version, forceUpdate] = useReducer((n: number) => n + 1, 0);
@@ -97,9 +122,24 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const colorScheme =
     COLOR_SCHEMES.find((scheme) => scheme.name === colorSchemeName) ?? DEFAULT_SCHEME;
   const [pieceSetName, setPieceSetName] = useLocalStorage('pieceSet', DEFAULT_PIECE_SET);
+  const [optionPrefs, setOptionPrefs] = useLocalStorage<Record<string, string>>(
+    `variantOptions:${variantName}`,
+    {},
+  );
 
-  const engine = useAiEngine(variantName);
+  const engine = useAiEngine(variantName, activeOverrides);
   const game = gameRef.current;
+  const variantOptions = game.getOptions();
+  // Whether the user has unapplied option changes — applied on next New Game.
+  // A "Random" preference is treated as pending while the active value is
+  // concrete; clicking New Game will re-resolve it.
+  const pendingOptionChanges = variantOptions.some((option) => {
+    if (option.displayName === null) return false;
+    const pref = optionPrefs[option.displayName];
+    if (pref === undefined) return false;
+    const active = activeOverrides[option.displayName] ?? option.value;
+    return pref !== active;
+  });
 
   // Auto-switch the rendered set if the user's preferred one is missing any of
   // this variant's piece types (e.g. Omega Chess needs Wizard, which Standard
@@ -181,7 +221,11 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   };
 
   const handleNewGame = (): void => {
-    gameRef.current = createGame(variantName);
+    // Re-resolve options each new game so "Random" picks a fresh value.
+    const probe = createGame(variantName, {});
+    const nextOverrides = resolveOverrides(probe.getOptions(), optionPrefs);
+    gameRef.current = createGame(variantName, nextOverrides);
+    setActiveOverrides(nextOverrides);
     moveHashes.current = [];
     aiBusy.current = false;
     setSelectedSquare(null);
@@ -190,6 +234,10 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
     setThinking(false);
     setReviewCursor(null);
     forceUpdate();
+  };
+
+  const handleOptionChange = (displayName: string, value: string): void => {
+    setOptionPrefs({ ...optionPrefs, [displayName]: value });
   };
 
   const handleUndo = (): void => {
@@ -247,7 +295,10 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
   const loadPgn = (): void => {
     try {
       const parsed = importPgn(pgnText);
-      const next = createGame(variantName);
+      // PGN doesn't carry option choices; replay against the currently-active
+      // setup. (Loading a PGN from a game with different armies would require
+      // saving + restoring the overrides — left for a future iteration.)
+      const next = createGame(variantName, activeOverrides);
       for (const token of parsed.moves) applyMoveToken(next, token);
       gameRef.current = next;
       const played = next.getMoveHistory();
@@ -359,6 +410,13 @@ export function GameView({ variantName }: GameViewProps): React.JSX.Element {
             </button>
           )}
         </div>
+
+        <VariantOptionsPanel
+          options={variantOptions}
+          prefs={optionPrefs}
+          onChange={handleOptionChange}
+          pendingChanges={pendingOptionChanges}
+        />
 
         <div className="ai-controls">
           <label>

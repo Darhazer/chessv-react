@@ -31,11 +31,22 @@ export interface AiEngine {
 }
 
 /** Manage an AI worker for the given variant. */
-export function useAiEngine(variantId: string): AiEngine {
+export function useAiEngine(
+  variantId: string,
+  optionOverrides: Record<string, string> | null = null,
+): AiEngine {
   const workerRef = useRef<Worker | null>(null);
   const onBestMove = useRef<((moveHash: number) => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [info, setInfo] = useState<EngineInfo | null>(null);
+
+  // Serialize overrides so the effect only re-runs when the value changes (not
+  // when the caller's object identity changes). Null and {} produce the same
+  // key, since both mean "no overrides".
+  const overridesKey =
+    optionOverrides === null || Object.keys(optionOverrides).length === 0
+      ? ''
+      : JSON.stringify(optionOverrides);
 
   useEffect(() => {
     const worker = new Worker(new URL('./aiWorker.ts', import.meta.url), { type: 'module' });
@@ -68,9 +79,18 @@ export function useAiEngine(variantId: string): AiEngine {
       }
     });
 
-    worker.postMessage({ type: 'init', variantId } satisfies ToWorker);
+    const init: ToWorker =
+      overridesKey === ''
+        ? { type: 'init', variantId }
+        : {
+            type: 'init',
+            variantId,
+            optionOverrides: JSON.parse(overridesKey) as Record<string, string>,
+          };
+    worker.postMessage(init);
+    setReady(false);
     return () => worker.terminate();
-  }, [variantId]);
+  }, [variantId, overridesKey]);
 
   const requestMove = (
     moveHashes: number[],

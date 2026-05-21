@@ -24,6 +24,16 @@ import type { FromWorker, ToWorker, TimeControl as ProtocolTimeControl } from '.
 
 let game: Game | null = null;
 let variantId: string | null = null;
+let optionOverrides: Record<string, string> | null = null;
+
+/** Build a fresh, initialized game using the stored variant + overrides. */
+function buildGame(): Game {
+  if (variantId === null) throw new Error('Worker not initialized');
+  const next = createVariant(variantId);
+  next.optionOverrides = optionOverrides;
+  next.initialize();
+  return next;
+}
 
 function post(message: FromWorker): void {
   (self as DedicatedWorkerGlobalScope).postMessage(message);
@@ -55,16 +65,15 @@ function handle(message: ToWorker): void {
   switch (message.type) {
     case 'init': {
       variantId = message.variantId;
-      game = createVariant(variantId);
-      game.initialize();
+      optionOverrides = message.optionOverrides ?? null;
+      game = buildGame();
       post({ type: 'ready' });
       break;
     }
     case 'position': {
       if (variantId === null) throw new Error('Worker received "position" before "init"');
       // Rebuild from the start position so the game state is exactly correct.
-      game = createVariant(variantId);
-      game.initialize();
+      game = buildGame();
       for (const moveHash of message.moveHashes) {
         game.makeMovement(Movement.fromHash(moveHash), false);
       }

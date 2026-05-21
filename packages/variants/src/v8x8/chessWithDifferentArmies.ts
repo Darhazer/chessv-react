@@ -68,13 +68,19 @@ export class ChessWithDifferentArmies extends Generic8x8 {
     super(new MirrorSymmetry());
   }
 
+  override getOptions(): ChoiceVariable[] {
+    return [this.whiteArmy, this.blackArmy];
+  }
+
   protected override setGameVariables(): void {
     super.setGameVariables();
     this.name = 'Chess with Different Armies';
     this.array = '#{BlackArray}/8/8/8/8/#{WhiteArray}';
     this.whiteArmy = new ChoiceVariable([...ARMIES]);
+    this.whiteArmy.displayName = 'White army';
     this.whiteArmy.value = 'Fabulous FIDEs';
     this.blackArmy = new ChoiceVariable([...ARMIES]);
+    this.blackArmy.displayName = 'Black army';
     this.blackArmy.value = 'Fabulous FIDEs';
     this.pawnDoubleMove = true;
     this.enPassant = true;

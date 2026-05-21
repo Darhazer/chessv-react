@@ -20,6 +20,12 @@ export class ChoiceVariable {
   private currentValue: string | null = null;
   /** The default choice, used when none is otherwise specified. */
   defaultValue: string | null = null;
+  /**
+   * Human-readable name for UI surfacing (e.g. "White army"). When set, the
+   * variant is opting this variable into the pre-game options dialog via
+   * {@link Game.getOptions}.
+   */
+  displayName: string | null = null;
 
   constructor(choices?: string[], defaultChoice: string | null = null) {
     if (choices) this.choiceList.push(...choices);

@@ -31,6 +31,7 @@ import {
 import { Board, NOT_CONNECTED } from './board.js';
 import { BoardMoveStack } from './boardMoveStack.js';
 import { INFINITY, MAX_GAME_LENGTH, MAX_PLY, ONEPLY } from './constants.js';
+import { ChoiceVariable } from './choiceVariable.js';
 import { ExObject } from './exObject.js';
 import { FEN } from './fen.js';
 import type { GenericPiece } from './genericPiece.js';
@@ -237,6 +238,14 @@ export class Game extends ExObject {
 
   protected finalized = false;
 
+  /**
+   * Optional pre-game choices keyed by {@link ChoiceVariable.displayName},
+   * applied between {@link setGameVariables} and {@link setOtherVariables}.
+   * Used by the UI / AI worker to surface variant-specific selections like the
+   * Chess-with-Different-Armies army picks.
+   */
+  optionOverrides: Record<string, string> | null = null;
+
   // *** CONSTRUCTION *** //
 
   constructor(numPlayers: number, numFiles: number, numRanks: number, symmetry: Symmetry) {
@@ -261,6 +270,13 @@ export class Game extends ExObject {
 
     // *** GAME VARIABLES *** //
     this.setGameVariables();
+    if (this.optionOverrides !== null) {
+      for (const option of this.getOptions()) {
+        if (option.displayName === null) continue;
+        const value = this.optionOverrides[option.displayName];
+        if (value !== undefined) option.value = value;
+      }
+    }
     this.setOtherVariables();
 
     // *** PIECE TYPES *** //
@@ -491,6 +507,17 @@ export class Game extends ExObject {
 
   /** React to choices made while resolving game variables. Override as needed. */
   protected setOtherVariables(): void {}
+
+  /**
+   * The pre-game options this variant exposes. Override in variants that have
+   * user-selectable {@link ChoiceVariable}s (e.g. Chess with Different Armies).
+   * Must be callable after {@link initialize} — i.e. after {@link setGameVariables}
+   * has populated the variables. Returned variables should have a non-null
+   * {@link ChoiceVariable.displayName} so the UI can label them.
+   */
+  getOptions(): ChoiceVariable[] {
+    return [];
+  }
 
   /** Add the variant's piece types via {@link addPieceType}. Override in variants. */
   protected addPieceTypes(): void {}

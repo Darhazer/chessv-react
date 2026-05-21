@@ -23,7 +23,13 @@ export interface TimeControl {
 
 /** Messages sent from the UI thread to the worker. */
 export type ToWorker =
-  | { type: 'init'; variantId: string; options?: Record<string, unknown> }
+  | {
+      type: 'init';
+      variantId: string;
+      /** Pre-game choices keyed by ChoiceVariable.displayName (e.g. army picks). */
+      optionOverrides?: Record<string, string>;
+      options?: Record<string, unknown>;
+    }
   /**
    * Set the position by replaying moves from the variant's start position.
    * Each entry is a packed 32-bit `Movement` hash. Replaying (rather than
