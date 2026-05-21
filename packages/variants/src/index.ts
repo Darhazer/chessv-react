@@ -51,6 +51,7 @@ import { FalconChess } from './v10x8/falconChess.js';
 import { JanusChess } from './v10x8/janusChess.js';
 import { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
 import { NewChancellorChess } from './v10x8/newChancellorChess.js';
+import { SymmetricChess } from './v9x8/symmetricChess.js';
 import { ChancellorChess } from './v9x9/chancellorChess.js';
 import { MinistersChess } from './v9x9/ministersChess.js';
 import { Warochess } from './v9x9/warochess.js';
@@ -66,6 +67,8 @@ import { JanusKamilChess } from './v12x10/janusKamilChess.js';
 import { ChessAndAHalf } from './v12x12/chessAndAHalf.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { GrossChess } from './v12x12/grossChess.js';
+import { Odyssey } from './v12x12/odyssey.js';
+import { OmegaChess } from './v12x12/omegaChess.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
@@ -73,6 +76,7 @@ import { Archchess } from './v10x10/archchess.js';
 import { Brouhaha } from './v10x10/brouhaha.js';
 import { Colossus } from './v10x10/colossus.js';
 import { EurasianChess } from './v10x10/eurasianChess.js';
+import { OdinsRuneChess } from './v10x10/odinsRuneChess.js';
 import {
   EmperorsGame,
   GrandChess,
@@ -145,6 +149,7 @@ export { FalconChess } from './v10x8/falconChess.js';
 export { JanusChess } from './v10x8/janusChess.js';
 export { LionsAndUnicornsChess } from './v10x8/lionsAndUnicornsChess.js';
 export { NewChancellorChess } from './v10x8/newChancellorChess.js';
+export { SymmetricChess } from './v9x8/symmetricChess.js';
 export { ChancellorChess } from './v9x9/chancellorChess.js';
 export { MinistersChess } from './v9x9/ministersChess.js';
 export { Warochess } from './v9x9/warochess.js';
@@ -160,6 +165,8 @@ export { JanusKamilChess } from './v12x10/janusKamilChess.js';
 export { ChessAndAHalf } from './v12x12/chessAndAHalf.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { GrossChess } from './v12x12/grossChess.js';
+export { Odyssey } from './v12x12/odyssey.js';
+export { OmegaChess } from './v12x12/omegaChess.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
 export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
@@ -167,6 +174,7 @@ export { Archchess } from './v10x10/archchess.js';
 export { Brouhaha } from './v10x10/brouhaha.js';
 export { Colossus } from './v10x10/colossus.js';
 export { EurasianChess } from './v10x10/eurasianChess.js';
+export { OdinsRuneChess } from './v10x10/odinsRuneChess.js';
 export {
   EmperorsGame,
   GrandChess,
@@ -626,6 +634,21 @@ registerVariant({
 });
 
 registerVariant({
+  name: "Odin's Rune Chess",
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2005',
+  inventedBy: 'Gary K. Gifford',
+  description:
+    'A 10 x 10 Norse-themed variant. Each side has two kings; a king has no ' +
+    'moves of its own but adopts the move-sets of friendly pieces beside it. ' +
+    'Win by extinction; the side with no moves loses outright.',
+  colorScheme: 'Valhalla',
+  create: () => new OdinsRuneChess(),
+});
+
+registerVariant({
   name: 'Roman Chess',
   files: 10,
   ranks: 10,
@@ -932,6 +955,22 @@ registerVariant({
   create: () => new GreatShatranjR(),
 });
 
+// *** 9x8 VARIANTS *** //
+
+registerVariant({
+  name: 'Symmetric Chess',
+  files: 9,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2014',
+  inventedBy: 'Carlos Cetina',
+  description:
+    'A symmetric 9 x 8 layout: the king is flanked by two queens. The first ' +
+    'time each bishop moves it may take one orthogonal step instead, ' +
+    'splitting the pair onto opposite colours.',
+  create: () => new SymmetricChess(),
+});
+
 // *** 9x9 VARIANTS *** //
 
 registerVariant({
@@ -1133,6 +1172,35 @@ registerVariant({
     'A 12 x 12 variant with Guards, Cats (capture-by-overtake), Star Cats, ' +
     'Speedy Knights and Eques Rex; pawns can step sideways past the half-way line.',
   create: () => new ChessAndAHalf(),
+});
+
+registerVariant({
+  name: 'Odyssey',
+  files: 12,
+  ranks: 12,
+  tags: ['Chess Variant'],
+  invented: '2016',
+  inventedBy: 'Greg Strong',
+  description:
+    'A 12 x 12 super-variant with Dragon Kings, Dragon Horses, Generals and a ' +
+    'rifle-capturing Assassin that may not voluntarily trade itself.',
+  colorScheme: 'Sublimation',
+  create: () => new Odyssey(),
+});
+
+registerVariant({
+  name: 'Omega Chess',
+  files: 12,
+  ranks: 12,
+  tags: ['Chess Variant', 'Popular'],
+  invented: '1992',
+  inventedBy: 'Daniel MacDonald',
+  description:
+    'A 10 x 10 game with four "wizard" corner squares jutting out from the ' +
+    'border. Adds the Wizard (Ferz + Camel) on each corner and a Champion ' +
+    '(Wazir + Elephant + Dabbabah) beside each rook. Pawns promote on the 11th rank.',
+  colorScheme: 'Buckingham Green',
+  create: () => new OmegaChess(),
 });
 
 // *** 16x8 VARIANTS *** //

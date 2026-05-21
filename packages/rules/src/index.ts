@@ -12,9 +12,11 @@ export {
   AliceFlexibleCastlingRule,
 } from './aliceCastlingRules.js';
 export { AliceRule } from './aliceRule.js';
+export { AssassinTradeRestrictionRule } from './assassinTradeRestrictionRule.js';
 export { BareKingRule } from './bareKingRule.js';
 export { BasicPromotionRule } from './basicPromotionRule.js';
 export { BerolinaEnPassantRule } from './berolinaEnPassantRule.js';
+export { BishopConversionRule } from './bishopConversionRule.js';
 export { BrouhahaBorderRule } from './brouhahaBorderRule.js';
 export { CastlingRule } from './castlingRule.js';
 export { FlexibleCastlingRule } from './flexibleCastlingRule.js';
@@ -34,6 +36,8 @@ export { KingsFlightRule } from './kingsFlightRule.js';
 export { KingsLeapRule } from './kingsLeapRule.js';
 export { LocationVictoryConditionRule } from './locationVictoryConditionRule.js';
 export { Move50Rule } from './move50Rule.js';
+export { NoMoveResultRule } from './noMoveResultRule.js';
+export { OmegaChessBorderRule } from './omegaChessBorderRule.js';
 export { PieceLocationRestrictionRule } from './pieceLocationRestrictionRule.js';
 export {
   DoubleMoveCompletionRule,

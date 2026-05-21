@@ -59,4 +59,5 @@ export {
   Wizard,
 } from './fairy.js';
 export { BentHero, BentShaman, Falcon, SlidingGeneral } from './multiPath.js';
+export { ForestOx, OdinKing, OdinPawn, Valkyrie } from './odinsRune.js';
 export { Cannon, Vao } from './xiangqi.js';

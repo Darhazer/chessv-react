@@ -1,8 +1,15 @@
-# Phase 3 — deferred variants
+# Phase 3 — port reference ✅ COMPLETE
 
-The first Phase-3 batch ported 51 variants; follow-up sessions ported **FlexibleCastlingRule**, **PromoteByReplacementRule**, **Chess960** support, the **multi-move completion rules**, **pocket drops**, **two-board (Alice) geometry**, **cylindrical geometry** and the **KingsLeapRule**, unlocking 19 more (clusters 1–7 plus a head start on cluster 8). What remains is a handful of bespoke per-variant ports (cluster 8) and a few unlocking-rules that would each yield one variant — they are documented below as standalone follow-ups rather than blockers.
+Every variant blocker described here has been ported. The catalog now
+registers **85 distinct chess variants** on top of `ChessWithDifferentArmies`
+(one entry; covers all 16 CwDA matchups via ChoiceVariables). That matches
+ChessV's published catalog modulo the 16 "Generic" UI templates (build-
+your-own-variant templates, not playable as-is) and the 15 separately-
+registered CwDA matchup default-army pairings.
 
-This document is a checklist for the engine work that would unlock each cluster.
+This document is preserved as a port reference so future readers can see
+which C# file each rule comes from. The original checklist follows; all
+clusters are now ✅.
 
 Each section names the work, points at the C# source to port, and lists the
 variants it unblocks. Pick a cluster, port the engine piece, then the variants
@@ -130,10 +137,9 @@ to drop the duplicate sliding moves that wrap produces.
 
 **Unlocked:** Cylindrical Chess (8×8).
 
-**Still deferred:** Omega Chess — its wizard corner squares (104 squares
-on a hybrid 12×12 + 4) need a fresh geometry class with its own square
-notation and a per-piece move generator for the corners. Out of scope
-for this batch.
+**Omega Chess — done.** Implemented as a 12×12 board with the
+`OmegaChessBorderRule` blocking access to non-corner border squares.
+The four corners ("wizard squares") remain reachable.
 
 ---
 
@@ -161,22 +167,27 @@ en passant and the pawn double-move.
 
 ---
 
-## 8. Bespoke custom rules / pieces — partial
+## 8. Bespoke custom rules / pieces — ✅ DONE
 
-Each of these is a one-off and self-contained. ✅ marks ones that landed in
-the Phase-3 batches.
+Every bespoke variant in this cluster now ships.
 
 | Variant | Source file(s) | Notes |
 | --- | --- | --- |
-| ✅ Archchess (10×10) | `Rules/KingsLeapRule.cs` | King may leap once per game. Done. |
-| ✅ Brouhaha (10×10) | `Rules/Brouhaha/` | Border rule + conditional move capabilities for Cleric/Scout. Done. |
-| Odin's Rune Chess (10x10) | `Pieces/OdinsRune/`, `Rules/OdinsRune/` | Custom move generators (adjacency-based). |
-| Odyssey (12x12) | `Rules/Odyssey/` | Assassin trade-restriction rule; multi-char piece notation. |
-| Symmetric Chess (9x8) | `Rules/Symmetric/BishopConversionRule.cs` | ~550 lines of bishop-conversion privilege bookkeeping. |
-| ✅ Falcon Chess (10×8) | `Pieces/MultiPath.cs` | Multi-path piece; the engine's `MovePathInfo` machinery did the work. Done. |
-| Yang Qi (9x10) | `Rules/YangQi/` | Custom king-swap rule (+ Replacement promotion). |
-| Courier Chess Moderno (12x8) | `Rules/ExtraMovesForUnmovedPieceRule.cs` | Unmoved-piece extra move + a custom `"3-3"` castling style. |
-| Chess And A Half (12x12) | `Rules/OptionalCaptureByOvertakeRule.cs` | Multi-target capture + complex promotion. |
+| ✅ Archchess (10×10) | `Rules/KingsLeapRule.cs` | King may leap once per game. |
+| ✅ ArchCourier Chess (12×8) | `Pieces/...` | Five fairy pieces; Replacement promotion. |
+| ✅ Brouhaha (10×10) | `Rules/Brouhaha/` | Border rule + conditional Cleric/Scout first moves. |
+| ✅ Chess and a Half (12×12) | `Rules/OptionalCaptureByOvertakeRule.cs` | Multi-target capture; multi-target promotion. |
+| ✅ Colossus (10×10) | inline | Bespoke 1-3 / 1-4 flexible castling. |
+| ✅ Courier Chess Moderno (12×8) | `Rules/ExtraMovesForUnmovedPieceRule.cs` | Unmoved-piece extra move + 3-3 castling + bare king. |
+| ✅ Duplex Chess (8×8) | `Rules/MultiMove/DuplexChessMoveCompletionRule.cs` | Multi-move with opening drops, three victory conditions. |
+| ✅ Falcon Chess (10×8) | `Pieces/MultiPath.cs` | Multi-path piece via `MovePathInfo`. |
+| ✅ Gross Chess (12×12) | `Rules/Gross/GrossChessPromotionRule.cs` | Pre-stocked reserve + per-rank promotion target restriction. |
+| ✅ King's Court (12×12) | `Rules/KingsCourt/KingsFlightRule.cs` | King flees two squares when chased by a Chancellor. |
+| ✅ Odin's Rune Chess (10×10) | `Pieces/OdinsRune/` | King adopts adjacent friendly piece moves; Valkyrie / Forest Ox custom move generators. |
+| ✅ Odyssey (12×12) | `Rules/Odyssey/AssassinTradeRestrictionRule.cs` | Rifle-capturing Assassin with anti-trade restriction. |
+| ✅ Omega Chess (12×12 + corners) | `Rules/Omega/OmegaChessBorderRule.cs` | Inner 10×10 with four wizard corners; rest of the border ring inaccessible. |
+| ✅ Symmetric Chess (9×8) | `Rules/Symmetric/BishopConversionRule.cs` | Bishop-conversion privilege bookkeeping. |
+| ✅ Yáng Qí (9×10) | `Rules/YangQi/` | King-swap rule + Replacement promotion. |
 
 ---
 
@@ -195,5 +206,4 @@ Tackling the clusters above roughly in this order is the best return on effort:
    Omega Chess (corner squares) still pending.
 7. ✅ **Multi-board (Alice)** — done. Alice Chess unlocked (castling /
    en passant disabled pending Alice-wrapped rules).
-8. **Bespoke rules** — ✅ KingsLeapRule + Archchess done; the rest are
-   one-off ports remaining as future work.
+8. ✅ **Bespoke rules** — done. 15 variants ported.
