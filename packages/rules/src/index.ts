@@ -26,7 +26,9 @@ export {
 } from './complexPromotionRule.js';
 export { EnPassantRule } from './enPassantRule.js';
 export { ExtinctionRule } from './extinctionRule.js';
+export { ExtraMovesForUnmovedPieceRule } from './extraMovesForUnmovedPieceRule.js';
 export { KingFacingRule } from './kingFacingRule.js';
+export { KingsFlightRule } from './kingsFlightRule.js';
 export { KingsLeapRule } from './kingsLeapRule.js';
 export { Move50Rule } from './move50Rule.js';
 export { PieceLocationRestrictionRule } from './pieceLocationRestrictionRule.js';
@@ -43,3 +45,4 @@ export {
 } from './promoteByReplacementRule.js';
 export { RelativeRoyaltyCheckmateRule } from './relativeRoyaltyCheckmateRule.js';
 export { RepetitionDrawRule } from './repetitionDrawRule.js';
+export { YangQiKingSwapRule } from './yangQiKingSwapRule.js';

@@ -55,8 +55,12 @@ import { MinistersChess } from './v9x9/ministersChess.js';
 import { Warochess } from './v9x9/warochess.js';
 import { MainzerSchach } from './v11x8/mainzerSchach.js';
 import { WildebeestChess } from './v11x10/wildebeestChess.js';
+import { YangQi } from './v9x10/yangQi.js';
+import { ArchCourierChess } from './v12x8/archCourierChess.js';
 import { CagliostrosChess } from './v12x8/cagliostrosChess.js';
 import { CourierChess } from './v12x8/courierChess.js';
+import { CourierChessModerno } from './v12x8/courierChessModerno.js';
+import { KingsCourt } from './v12x8/kingsCourt.js';
 import { JanusKamilChess } from './v12x10/janusKamilChess.js';
 import { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 import { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
@@ -64,6 +68,7 @@ import { AliceChess } from './vMiscellaneous/aliceChess.js';
 import { VikingChess } from './vMiscellaneous/vikingChess.js';
 import { Archchess } from './v10x10/archchess.js';
 import { Brouhaha } from './v10x10/brouhaha.js';
+import { Colossus } from './v10x10/colossus.js';
 import { EurasianChess } from './v10x10/eurasianChess.js';
 import {
   EmperorsGame,
@@ -141,8 +146,12 @@ export { MinistersChess } from './v9x9/ministersChess.js';
 export { Warochess } from './v9x9/warochess.js';
 export { MainzerSchach } from './v11x8/mainzerSchach.js';
 export { WildebeestChess } from './v11x10/wildebeestChess.js';
+export { YangQi } from './v9x10/yangQi.js';
 export { CagliostrosChess } from './v12x8/cagliostrosChess.js';
+export { ArchCourierChess } from './v12x8/archCourierChess.js';
 export { CourierChess } from './v12x8/courierChess.js';
+export { CourierChessModerno } from './v12x8/courierChessModerno.js';
+export { KingsCourt } from './v12x8/kingsCourt.js';
 export { JanusKamilChess } from './v12x10/janusKamilChess.js';
 export { ChessOnA12x12Board } from './v12x12/chessOnA12x12Board.js';
 export { DoubleChess16x8 } from './v16x8/doubleChess16x8.js';
@@ -150,6 +159,7 @@ export { AliceChess } from './vMiscellaneous/aliceChess.js';
 export { VikingChess } from './vMiscellaneous/vikingChess.js';
 export { Archchess } from './v10x10/archchess.js';
 export { Brouhaha } from './v10x10/brouhaha.js';
+export { Colossus } from './v10x10/colossus.js';
 export { EurasianChess } from './v10x10/eurasianChess.js';
 export {
   EmperorsGame,
@@ -583,6 +593,19 @@ registerVariant({
 });
 
 registerVariant({
+  name: 'Colossus',
+  files: 10,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2010',
+  inventedBy: 'Charles Daniel',
+  description:
+    'A 10 x 10 variant with the standard pieces but twice as many rooks, knights ' +
+    'and bishops, plus a bespoke 1-3 / 1-4 flexible castling style.',
+  create: () => new Colossus(),
+});
+
+registerVariant({
   name: 'Roman Chess',
   files: 10,
   ranks: 10,
@@ -953,6 +976,22 @@ registerVariant({
   create: () => new WildebeestChess(),
 });
 
+// *** 9x10 VARIANTS *** //
+
+registerVariant({
+  name: 'Yáng Qí',
+  files: 9,
+  ranks: 10,
+  tags: ['Chess Variant'],
+  invented: '2001',
+  inventedBy: 'Fergus Duniho',
+  description:
+    'A 9 x 10 East-meets-West hybrid: orthodox pieces plus Chinese-style Cannons and Vaos ("Arrows"). ' +
+    'The king has the swap ability with adjacent friendly pieces (not pawns); pawns promote by replacement.',
+  colorScheme: 'Surrealistic Summer',
+  create: () => new YangQi(),
+});
+
 // *** 12x8 VARIANTS *** //
 
 registerVariant({
@@ -977,6 +1016,47 @@ registerVariant({
     'The medieval 12 x 8 game dating back to at least 1202 and played for six hundred years.',
   colorScheme: 'Sahara',
   create: () => new CourierChess(),
+});
+
+registerVariant({
+  name: 'Courier Chess Moderno',
+  files: 12,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2008',
+  inventedBy: 'Jose Carrillo',
+  description:
+    'A modernised version of historic Courier Chess. Adds the Mann, Schleich and ' +
+    'Elephant (with 2-square leaps from its starting square). Win by capturing the ' +
+    'last non-king piece (bare king).',
+  create: () => new CourierChessModerno(),
+});
+
+registerVariant({
+  name: 'ArchCourier Chess',
+  files: 12,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '2006',
+  inventedBy: 'Eric V. Greenwood',
+  description:
+    'A 12 x 8 variant packing the back rank with five fairy pieces (Crowned Rook, ' +
+    'ArchCourier, Squirrel, Duke, Guard) plus the standard set. Replacement promotion.',
+  create: () => new ArchCourierChess(),
+});
+
+registerVariant({
+  name: "King's Court",
+  files: 12,
+  ranks: 8,
+  tags: ['Chess Variant'],
+  invented: '1997',
+  inventedBy: 'Sidney LeVasseur',
+  description:
+    'A 12 x 8 variant with Jesters and short-range Chancellors. When a Chancellor ' +
+    'lines up with the king, the king may flee two squares in any direction.',
+  colorScheme: 'Golden Goose Egg',
+  create: () => new KingsCourt(),
 });
 
 // *** 12x10 VARIANTS *** //

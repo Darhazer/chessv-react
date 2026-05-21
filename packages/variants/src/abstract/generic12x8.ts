@@ -112,9 +112,36 @@ export abstract class Generic12x8 extends Generic__x8 {
       throw new Error('Cannot enable castling — King does not start on a supported square');
     }
 
-    // "Flexible" and "Close-Rook Flexible" need the FlexibleCastlingRule
-    // (not yet ported) — handled by skipping below.
+    // Flexible variants use FlexibleCastlingRule: the king slides two or
+    // more squares toward the partner piece, which jumps to the king's
+    // other side once the slide stops.
     if (value === 'Flexible' || value === 'Close-Rook Flexible') {
+      const closeRookFlex = value === 'Close-Rook Flexible';
+      const partnerLeft = closeRookFlex ? 'b' : 'a';
+      const partnerRight = closeRookFlex ? 'k' : 'l';
+      this.addFlexibleCastlingRule();
+      const offset = (ch: string, n: number): string =>
+        String.fromCharCode(ch.charCodeAt(0) + n);
+      const move = (player: 0 | 1, kingSquare: string, rank: '1' | '8'): void => {
+        const kingChar = kingSquare[0]!;
+        const priv = (c: string): string => (player === 0 ? c.toUpperCase() : c.toLowerCase());
+        this.flexibleCastlingMove(
+          player,
+          kingSquare,
+          `${offset(kingChar, 2)}${rank}`,
+          `${partnerRight}${rank}`,
+          priv(partnerRight),
+        );
+        this.flexibleCastlingMove(
+          player,
+          kingSquare,
+          `${offset(kingChar, -2)}${rank}`,
+          `${partnerLeft}${rank}`,
+          priv(partnerLeft),
+        );
+      };
+      move(0, whiteKingSquare, '1');
+      move(1, blackKingSquare, '8');
       return;
     }
 
