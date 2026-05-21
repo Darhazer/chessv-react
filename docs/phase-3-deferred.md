@@ -40,13 +40,14 @@ the `"Flexible"` / `"Close-Rook Flexible"` / `"2R Flexible"` castling choices.
 
 **Unlocked (5 variants registered):** Carrera's Chess, Schoolbook Chess,
 Grotesque Chess, Ladorean Chess, Univers Chess (all 10×8 Capablanca-family).
-Other variants in the original list (the Wildebeest-style castling on
-11×10, King's Court, Colossus's custom "Colossus" flexible variant) are
-still gated on additional bespoke work.
+The Colossus and King's Court "flexible" variants ship via their own
+bespoke wirings (see cluster 8); the Wildebeest-style castling option
+on the 11×10 base class is the last `FlexibleCastlingRule` consumer not
+yet exercised by a registered variant.
 
 ---
 
-## 2. Replacement / Grand promotion ✅ PARTIAL
+## 2. Replacement / Grand / complex promotion ✅ DONE
 
 **Status:** `PromoteByReplacementRule` is ported and wired through.
 - `packages/rules/src/promoteByReplacementRule.ts` with the
@@ -75,11 +76,6 @@ multi-path piece machinery Lemurian needed (`BentShaman`, `BentHero`,
 **Eurasian Chess — done.** Ports the xiangqi `KingFacingRule` and
 `PieceLocationRestrictionRule` into `packages/rules/src/`. The variant
 lives at `packages/variants/src/v10x10/eurasianChess.ts`.
-
-**Still deferred:**
-
-- 12×12: Gross Chess, Chess And A Half — both need bespoke rules.
-- 9×10: Yang Qi — also needs the custom king-swap rule.
 
 ---
 
@@ -196,14 +192,14 @@ Every bespoke variant in this cluster now ships.
 Tackling the clusters above roughly in this order is the best return on effort:
 
 1. ✅ **Flexible castling** — done. 5 variants unlocked.
-2. ✅ **Replacement promotion** — done (base rule). 6 variants unlocked.
-   Complex / colorbound promotion still pending.
+2. ✅ **Replacement / complex / colorbound promotion** — done.
 3. ✅ **Fischer-style castling** — done. 2 variants unlocked.
-4. ✅ **Multi-move turns** — done. 2 variants unlocked.
-5. ✅ **Drops / pockets** — done (single-piece pocket). Pocket Knight unlocked;
-   Shogi/Crazyhouse hands extend this naturally.
-6. ✅ **Cylindrical geometry** — done. Cylindrical Chess unlocked.
-   Omega Chess (corner squares) still pending.
-7. ✅ **Multi-board (Alice)** — done. Alice Chess unlocked (castling /
-   en passant disabled pending Alice-wrapped rules).
-8. ✅ **Bespoke rules** — done. 15 variants ported.
+4. ✅ **Multi-move turns** — done. 2 variants unlocked + Duplex Chess.
+5. ✅ **Drops / pockets** — done. Pocket Knight unlocked; the rule
+   generalises to Shogi-family hands once those land.
+6. ✅ **Cylindrical / non-rectangular geometry** — done. Cylindrical
+   Chess and Omega Chess unlocked.
+7. ✅ **Multi-board (Alice)** — done. Alice Chess unlocked, including
+   castling, en passant and the pawn double-move (all three Alice-wrapped
+   rules ported).
+8. ✅ **Bespoke rules** — done. All 15 cluster-8 variants ported.
