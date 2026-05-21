@@ -1,21 +1,33 @@
 # ChessV Web
 
 A browser port of **[ChessV](http://www.chessv.org/)** — a powerful chess-variant
-engine and GUI originally written in C#/.NET by Greg Strong. This project reimplements
-ChessV in TypeScript and React so its 160 chess variants can be played in the browser.
+engine and GUI originally written in C#/.NET by Greg Strong. This project
+reimplements ChessV in TypeScript and React so every variant it ships can be
+played in the browser.
 
 ## Status
-
-Early development. See `~/.claude/plans/` for the full porting plan and roadmap.
 
 | Phase | Scope | Status |
 | ----- | ----- | ------ |
 | 0 | Monorepo scaffold | done |
 | 1 | Core engine + Standard Chess playable | done |
 | 2 | AI engine (Web Worker) | done |
-| 3 | All 160 variants | done (51 ported; see [phase-3-deferred](docs/phase-3-deferred.md)) |
+| 3 | Variant catalog | done — 85 variants registered (see [phase-3-deferred](docs/phase-3-deferred.md)) |
 | 4 | Themes, PGN, polish | done (see [phase-4-deferred](docs/phase-4-deferred.md)) |
 | 5 | Hardening / parity testing | done |
+
+### Variant coverage
+
+ChessV's C# source has 114 `[Game]` attribute entries. After accounting for
+the 16 "Generic" UI templates (configuration scaffolds for build-your-own
+variants, not playable as-is) and 15 of the `CwDA: X vs. Y` matchups (which
+all instantiate the same `ChessWithDifferentArmies` class with different
+default armies), ChessV ships **82 distinct playable variants**. This port
+registers **85** of them — every base variant is covered, with two of them
+(`Grand Shatranj`, `Great Shatranj`) split into four cards where the
+C# version exposes them through a `Variant` choice. `ChessWithDifferentArmies`
+is registered once and exposes the 16 army pairings via internal choice
+variables.
 
 ## Workspace layout
 
@@ -24,7 +36,7 @@ packages/
   engine/    @chessv/engine    core game model: board, pieces, moves, rules, FEN
   rules/     @chessv/rules     pluggable Rule subclasses (castling, en passant, ...)
   pieces/    @chessv/pieces    piece-type definitions
-  variants/  @chessv/variants  the 160 variant definitions + catalog registry
+  variants/  @chessv/variants  variant definitions + catalog registry
   ai/        @chessv/ai        alpha-beta search engine + Web Worker
   ui/        @chessv/app       React + Vite web client
 tools/       build scripts (asset conversion, perft comparison)
